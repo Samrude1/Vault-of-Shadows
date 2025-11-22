@@ -1,0 +1,29 @@
+# Documentation files (exclude all README variants except main one)
+README_*.md
+PHASE*.md
+PLAN.md
+README_ABOUT.md
+
+# Common temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Node modules (if any were added later)
+node_modules/
+
+# Build outputs (if any were added later)
+dist/
+build/
