@@ -1,6 +1,6 @@
 # Vault Of Shadows - Dungeon Crawler Game
 
-A web-based implementation of the classic Rogue dungeon crawling game, built with HTML5 Canvas and vanilla JavaScript.
+**Version 2.2** - A web-based implementation of the classic Rogue dungeon crawling game, built with HTML5 Canvas and vanilla JavaScript.
 
 ## About
 
@@ -8,16 +8,17 @@ This is a modern web implementation of Rogue, the classic dungeon crawling video
 
 ## Current Development Phase: Phase 1 (MVP) + Phase 2 Features - ✅ Complete
 
-The game has completed its MVP (Minimum Viable Product) phase and includes many Phase 2 features. The game is fully playable with all core features implemented and functional.
+The game has completed its MVP (Minimum Viable Product) phase and includes most Phase 2 features. The game is **fully playable and stable** with all core features implemented and recent bug fixes applied.
 
 ### Implemented Features
 
 - **Procedural Dungeon Generation**: Random room-and-corridor algorithm generates unique dungeons for each playthrough
 - **Turn-Based Gameplay**: Grid-based movement with turn-based combat system
 - **Player System**: 
-  - Movement with WASD or arrow keys (including diagonal movement)
+  - Movement with WASD or arrow keys (including diagonal movement with Q, E, Z, C)
   - Health system with visual health bar
-  - Combat stats (attack and defense)
+  - Combat stats (attack and defense) displayed in UI
+  - Gold currency system for purchasing items
 - **Monster AI**: 
   - Eight monster types with unique behaviors:
     - Kobolds, Orcs, Trolls (original monsters)
@@ -42,19 +43,28 @@ The game has completed its MVP (Minimum Viable Product) phase and includes many 
 - **Multiple Levels**: Descend deeper into the dungeon via stairs (> symbol)
 - **Win Condition**: Retrieve the Amulet of Yendor found on level 5
 - **Permadeath**: No saves or reloads - death means starting over
-- **User Interface**: 
+- **User Interface**:
   - Health display with color-coded status (green > 60%, yellow > 30%, red otherwise)
   - Level/depth counter showing current dungeon level
   - Gold counter tracking collected treasure
+  - Attack and Defense stats display
+  - Hunger display with color-coded status
   - Game message log showing combat, item pickup, and event messages
+  - Controls info panel showing all game controls
   - Game over screen (death) and victory screen (retrieved Amulet)
   - Restart button to begin a new game
-  - Sound settings panel with volume control and mute toggle
+  - Simple mute button for sound control
+- **Field of View / Fog of War**:
+  - Line-of-sight system with visibility radius (3 tiles)
+  - Fully visible areas shown in normal colors
+  - Explored but not visible areas shown in dimmed colors
+  - Unexplored areas remain completely black
+  - Items and monsters only visible when in line of sight
 - **Sound System**: 
   - Procedurally generated sound effects using Web Audio API
-  - Audio feedback for movement, combat, items, and events
-  - Volume control and mute toggle in settings panel
-  - Settings saved to localStorage
+  - Audio feedback for movement, combat, items, shop, and events
+  - Simple mute toggle button
+  - Mute state saved to localStorage
   - No external audio files required
 - **Monster Drops**:
   - Monsters drop gold when killed (amount varies by monster type)
@@ -70,6 +80,12 @@ The game has completed its MVP (Minimum Viable Product) phase and includes many 
   - Teleportation, Magic Missile, Healing, Enchantment
   - Scrolls spawn randomly in dungeons
   - One-time use with powerful effects
+- **Gold Shop System**:
+  - Shops spawn once per level (green & symbol)
+  - Press B key when standing on shop tile to open
+  - Purchase health potions, food, and permanent stat upgrades
+  - Prices: Health Potion (10g), Bread (10g), Rations (15g), Attack/Defense Upgrades (50g each)
+  - Provides strategic use for collected gold
 
 ## How to Play
 
@@ -77,13 +93,14 @@ The game has completed its MVP (Minimum Viable Product) phase and includes many 
 2. Use **WASD** or **arrow keys** to move your character (@)
 3. Use **Q, E, Z, C** for diagonal movement
 4. Press **Space** to wait/skip a turn
-5. Walk into monsters to attack them
-6. Walk over items to automatically pick them up
-7. Manage your hunger by eating food (% symbol)
-8. Use stairs down (>) to descend deeper into the dungeon
-9. Use stairs up (<) to ascend to previous levels
-10. Find the **Amulet of Yendor** on level 5
-11. Return to level 1 with the Amulet to win!
+5. Press **B** when standing on a shop (& symbol) to buy items
+6. Walk into monsters to attack them
+7. Walk over items to automatically pick them up
+8. Manage your hunger by eating food (% symbol)
+9. Use stairs down (>) to descend deeper into the dungeon
+10. Use stairs up (<) to ascend to previous levels
+11. Find the **Amulet of Yendor** on level 5
+12. Return to level 1 with the Amulet to win!
 
 ### Controls
 
@@ -99,6 +116,7 @@ The game has completed its MVP (Minimum Viable Product) phase and includes many 
   - C: Down-right
 - **Actions**: 
   - Space: Wait/skip a turn (useful for letting monsters move first)
+  - B: Open shop (when standing on & tile)
 
 ### Game Mechanics
 
@@ -137,6 +155,16 @@ The game has completed its MVP (Minimum Viable Product) phase and includes many 
   - Magic Missile: 10 damage to all enemies within 3 tiles
   - Healing: Restore 15 HP
   - Enchantment: +1 attack and +1 defense permanently
+- **Shop**: 
+  - Shops appear as green & symbols, one per level
+  - Press 'B' key when standing on shop tile to open
+  - Purchase items with collected gold:
+    - Health Potion (10 gold): Restores 10 HP
+    - Bread (10 gold): Restores 20 hunger
+    - Rations (15 gold): Restores 30 hunger
+    - Attack Upgrade (50 gold): Permanently increases attack by 1
+    - Defense Upgrade (50 gold): Permanently increases defense by 1
+  - Strategic spending can significantly improve survival chances
 - **Win Condition**: Find the Amulet of Yendor on level 5, then return to level 1 to escape the dungeon and win!
 - **Death**: When your health reaches 0, the game ends with permadeath. Click "Restart Game" to start fresh - no saves or checkpoints!
 
@@ -182,7 +210,46 @@ rogue/
 
 ## Recent Updates
 
-### Phase 2 Features - Recently Implemented
+### Latest Features (v2.2)
+
+- **Gold Shop System**: Added functional shops where players can spend collected gold:
+  - Shops spawn once per level (green & symbol)
+  - Press 'B' key when standing on shop tile to open shop interface
+  - Purchase health potions (10 gold), food items (10-15 gold), and permanent stat upgrades (50 gold)
+  - Provides strategic use for gold collected from monster drops
+  - Shop sound effects for opening and purchasing
+
+- **Attack/Defense Stats Display**: Added visible combat stats to the UI:
+  - Attack and Defense values now displayed alongside other stats
+  - Stats update in real-time when equipment is picked up or upgrades are purchased
+  - Helps players track character progression
+
+- **Simplified Sound Controls**: Streamlined audio interface:
+  - Removed complex settings panel with volume slider
+  - Added simple mute toggle button (🔊/🔇) in bottom-right corner
+  - One-click mute/unmute functionality
+  - Cleaner UI with no overlap of game elements
+
+- **Controls Info Panel**: Added helpful controls display below game canvas:
+  - Shows all movement keys (WASD, Arrow Keys, Q E Z C)
+  - Displays shop interaction key (B)
+  - Shows wait command (Space)
+  - Always visible for easy reference
+
+### Bug Fixes (v2.1)
+
+- **Fixed Settings Button Jamming**: Resolved issue where settings button would stop responding after game restart. Implemented proper event listener cleanup by cloning and replacing button elements to prevent multiple listeners from accumulating.
+
+- **Fixed Stairs Up Visibility**: Stairs up (`<`) symbols were not rendering in the dungeon. Added the missing rendering case to the drawTile function so players can now see and use stairs up to ascend levels.
+
+- **Implemented Field of View / Fog of War**: Added complete line-of-sight system:
+  - Player can see clearly within 3 tiles radius
+  - Explored areas are shown in dimmed colors
+  - Unexplored areas remain completely black
+  - Items and monsters only appear when visible
+  - Greatly improves dungeon exploration and strategy
+
+### Phase 2 Features - Previously Implemented
 
 - **Enhanced Monster Variety**: Added 5 new monster types with unique behaviors:
   - Bats that can fly through walls
@@ -235,10 +302,11 @@ rogue/
 
 Planned enhancements for future versions:
 
-- **Field of View / Fog of War**: Visible vs explored areas
-- **Advanced Items**: 
+- **Advanced Items**:
   - Item identification system for unknown potions/scrolls
 - **Traps and Special Rooms**: More dungeon variety
+  - Pit traps, arrow traps, poison traps
+  - Treasure rooms, monster nests, libraries, armories
 
 ## Original Rogue
 

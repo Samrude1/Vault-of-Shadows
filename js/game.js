@@ -17,6 +17,8 @@
         this.waitingForInput = false;
         this.hasAmulet = false;
         this.audioEnabled = false;
+        this.shopOpen = false;
+        this.shopPosition = null;
 
         this.messages = [];
         this.maxMessages = 5;
@@ -25,6 +27,11 @@
         // Hunger system
         this.turnCounter = 0;
         this.hungerDecreaseInterval = 10; // Decrease hunger every 10 turns
+
+        // Fog of war / visibility
+        this.explored = [];
+        this.visible = [];
+        this.visibilityRadius = 3; // How far the player can see
 
         // Enable audio on first user interaction
         const enableAudio = () => {
@@ -55,6 +62,10 @@
         // Create player at first room
         const startPos = this.dungeon.getRandomFloorPosition();
         this.player = new Player(startPos.x, startPos.y);
+
+        // Initialize fog of war
+        this.initFogOfWar();
+        this.updateVisibility();
 
         // Create monsters
         this.monsters = [];
@@ -132,6 +143,12 @@
             }
         }
 
+        // Place shop
+        this.shopPosition = this.dungeon.placeShop();
+        if (this.shopPosition) {
+            this.addMessage('You hear the sound of a merchant nearby...');
+        }
+
         this.gameOver = false;
         this.addMessage('Welcome to the dungeon! Move with WASD or arrow keys.');
         this.updateUI();
@@ -147,34 +164,67 @@
         this.gameLoop();
     }
 
+    initFogOfWar() {
+        // Initialize explored and visible arrays
+        this.explored = [];
+        this.visible = [];
+        for (let y = 0; y < this.dungeonHeight; y++) {
+            this.explored[y] = [];
+            this.visible[y] = [];
+            for (let x = 0; x < this.dungeonWidth; x++) {
+                this.explored[y][x] = false;
+                this.visible[y][x] = false;
+            }
+        }
+    }
+
+    updateVisibility() {
+        // Reset visible array
+        for (let y = 0; y < this.dungeonHeight; y++) {
+            for (let x = 0; x < this.dungeonWidth; x++) {
+                this.visible[y][x] = false;
+            }
+        }
+
+        // Mark visible tiles within radius
+        for (let dy = -this.visibilityRadius; dy <= this.visibilityRadius; dy++) {
+            for (let dx = -this.visibilityRadius; dx <= this.visibilityRadius; dx++) {
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= this.visibilityRadius) {
+                    const x = this.player.x + dx;
+                    const y = this.player.y + dy;
+
+                    if (x >= 0 && x < this.dungeonWidth && y >= 0 && y < this.dungeonHeight) {
+                        this.visible[y][x] = true;
+                        this.explored[y][x] = true; // Mark as explored
+                    }
+                }
+            }
+        }
+    }
+
+    isVisible(x, y) {
+        return this.visible[y] && this.visible[y][x];
+    }
+
+    isExplored(x, y) {
+        return this.explored[y] && this.explored[y][x];
+    }
+
     setupSoundSettings() {
-        const settingsToggle = document.getElementById('settings-toggle');
-        const settingsPanel = document.getElementById('settings-panel');
-        const volumeSlider = document.getElementById('volume-slider');
-        const volumeValue = document.getElementById('volume-value');
         const muteToggle = document.getElementById('mute-toggle');
 
-        // Load saved settings
-        volumeSlider.value = this.sound.volume * 100;
-        volumeValue.textContent = Math.round(this.sound.volume * 100) + '%';
-        muteToggle.textContent = this.sound.isMuted() ? 'ðŸ”‡ Muted' : 'ðŸ”Š Unmuted';
+        // Set initial icon based on mute state
+        muteToggle.textContent = this.sound.isMuted() ? '🔇' : '🔊';
 
-        // Toggle settings panel
-        settingsToggle.addEventListener('click', () => {
-            settingsPanel.classList.toggle('hidden');
-        });
-
-        // Volume slider
-        volumeSlider.addEventListener('input', () => {
-            const volume = volumeSlider.value / 100;
-            this.sound.setVolume(volume);
-            volumeValue.textContent = volumeSlider.value + '%';
-        });
+        // Remove any existing event listeners by cloning and replacing
+        const muteClone = muteToggle.cloneNode(true);
+        muteToggle.parentNode.replaceChild(muteClone, muteToggle);
 
         // Mute toggle
-        muteToggle.addEventListener('click', () => {
+        muteClone.addEventListener('click', () => {
             const muted = this.sound.toggleMute();
-            muteToggle.textContent = muted ? 'ðŸ”‡ Muted' : 'ðŸ”Š Unmuted';
+            muteClone.textContent = muted ? '🔇' : '🔊';
         });
     }
 
@@ -196,6 +246,15 @@
 
     handleInput() {
         if (!this.waitingForInput) {
+            // Check for shop interaction
+            if (this.input.isShop() && !this.shopOpen) {
+                const playerTile = this.dungeon.getTile(this.player.x, this.player.y);
+                if (playerTile === '&') {
+                    this.openShop();
+                    return;
+                }
+            }
+
             const movement = this.input.getMovement();
             if (movement) {
                 this.waitingForInput = true;
@@ -310,6 +369,7 @@
             const moved = this.player.move(movement.dx, movement.dy, this.dungeon);
             if (moved) {
                 this.sound.playMove();
+                this.updateVisibility(); // Update fog of war after movement
             }
 
             // Check for stairs
@@ -424,6 +484,10 @@
         this.player.x = startPos.x;
         this.player.y = startPos.y;
 
+        // Initialize fog of war for new level
+        this.initFogOfWar();
+        this.updateVisibility();
+
         // Create new monsters (more on deeper levels)
         this.monsters = [];
         const numMonsters = 5 + Math.floor(this.currentLevel * 2);
@@ -499,107 +563,117 @@
             }
         }
 
+        // Place shop
+        this.shopPosition = this.dungeon.placeShop();
+
         this.updateUI();
     }
-goToPreviousLevel() {
-    if (this.currentLevel <= 1) {
-        this.addMessage('You are already at the surface!');
-        return;
-    }
+    goToPreviousLevel() {
+        if (this.currentLevel <= 1) {
+            this.addMessage('You are already at the surface!');
+            return;
+        }
 
-    this.currentLevel--;
-    this.addMessage(`You ascend to level ${this.currentLevel}...`);
-    this.sound.playItemPickup(); // Use pickup sound for ascending
+        this.currentLevel--;
+        this.addMessage(`You ascend to level ${this.currentLevel}...`);
+        this.sound.playItemPickup(); // Use pickup sound for ascending
 
-    // Check win condition: level 1 with Amulet
-    if (this.currentLevel === 1 && this.hasAmulet) {
-        this.addMessage('You have escaped the dungeon with the Amulet of Yendor!');
-        this.endGame(true);
-        return;
-    }
+        // Check win condition: level 1 with Amulet
+        if (this.currentLevel === 1 && this.hasAmulet) {
+            this.addMessage('You have escaped the dungeon with the Amulet of Yendor!');
+            this.endGame(true);
+            return;
+        }
 
-    // Generate new dungeon
-    const generator = new DungeonGenerator(this.dungeonWidth, this.dungeonHeight);
-    this.dungeon = generator;
-    this.dungeon.generate();
+        // Generate new dungeon
+        const generator = new DungeonGenerator(this.dungeonWidth, this.dungeonHeight);
+        this.dungeon = generator;
+        this.dungeon.generate();
 
-    // Place stairs up on levels > 1
-    if (this.currentLevel > 1) {
-        this.dungeon.placeStairsUp();
-    }
+        // Place stairs up on levels > 1
+        if (this.currentLevel > 1) {
+            this.dungeon.placeStairsUp();
+        }
 
-    // Place player at start room
-    const startPos = this.dungeon.getRandomFloorPosition();
-    this.player.x = startPos.x;
-    this.player.y = startPos.y;
+        // Place player at start room
+        const startPos = this.dungeon.getRandomFloorPosition();
+        this.player.x = startPos.x;
+        this.player.y = startPos.y;
 
-    // Create new monsters
-    this.monsters = [];
-    const numMonsters = 5 + Math.floor(this.currentLevel * 2);
-    const usedPositions = new Set();
-    let attempts = 0;
-    const maxAttempts = numMonsters * 20;
+        // Initialize fog of war for new level
+        this.initFogOfWar();
+        this.updateVisibility();
 
-    for (let i = 0; i < numMonsters && attempts < maxAttempts; i++) {
-        attempts++;
-        const pos = this.dungeon.getRandomFloorPosition();
-        const posKey = `${pos.x},${pos.y}`;
+        // Create new monsters
+        this.monsters = [];
+        const numMonsters = 5 + Math.floor(this.currentLevel * 2);
+        const usedPositions = new Set();
+        let attempts = 0;
+        const maxAttempts = numMonsters * 20;
 
-        if (pos.x !== this.player.x || pos.y !== this.player.y) {
-            if (!usedPositions.has(posKey)) {
-                usedPositions.add(posKey);
-                const type = this.selectMonsterType(this.currentLevel);
-                this.monsters.push(new Monster(pos.x, pos.y, type));
+        for (let i = 0; i < numMonsters && attempts < maxAttempts; i++) {
+            attempts++;
+            const pos = this.dungeon.getRandomFloorPosition();
+            const posKey = `${pos.x},${pos.y}`;
+
+            if (pos.x !== this.player.x || pos.y !== this.player.y) {
+                if (!usedPositions.has(posKey)) {
+                    usedPositions.add(posKey);
+                    const type = this.selectMonsterType(this.currentLevel);
+                    this.monsters.push(new Monster(pos.x, pos.y, type));
+                } else {
+                    i--;
+                }
             } else {
                 i--;
             }
-        } else {
-            i--;
         }
-    }
 
-    // Create new items
-    this.items = [];
-    const numItems = 3 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < numItems; i++) {
-        const pos = this.dungeon.getRandomFloorPosition();
-        if (pos.x !== this.player.x || pos.y !== this.player.y) {
-            let itemTypes;
-            if (this.currentLevel <= 2) {
-                itemTypes = ['health_potion', 'dagger', 'leather_armor'];
-            } else if (this.currentLevel <= 4) {
-                itemTypes = ['health_potion', 'sword', 'mace', 'chain_mail'];
-            } else {
-                itemTypes = ['health_potion', 'axe', 'magic_staff', 'plate_armor', 'magic_robes'];
+        // Create new items
+        this.items = [];
+        const numItems = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numItems; i++) {
+            const pos = this.dungeon.getRandomFloorPosition();
+            if (pos.x !== this.player.x || pos.y !== this.player.y) {
+                let itemTypes;
+                if (this.currentLevel <= 2) {
+                    itemTypes = ['health_potion', 'dagger', 'leather_armor'];
+                } else if (this.currentLevel <= 4) {
+                    itemTypes = ['health_potion', 'sword', 'mace', 'chain_mail'];
+                } else {
+                    itemTypes = ['health_potion', 'axe', 'magic_staff', 'plate_armor', 'magic_robes'];
+                }
+                const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+                this.items.push(new Item(pos.x, pos.y, type));
             }
-            const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
-            this.items.push(new Item(pos.x, pos.y, type));
         }
-    }
 
-    // Spawn food items
-    const numFood = 1 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < numFood; i++) {
-        const pos = this.dungeon.getRandomFloorPosition();
-        if (pos.x !== this.player.x || pos.y !== this.player.y) {
-            const foodType = Math.random() < 0.5 ? 'rations' : 'bread';
-            this.items.push(new Item(pos.x, pos.y, foodType));
+        // Spawn food items
+        const numFood = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < numFood; i++) {
+            const pos = this.dungeon.getRandomFloorPosition();
+            if (pos.x !== this.player.x || pos.y !== this.player.y) {
+                const foodType = Math.random() < 0.5 ? 'rations' : 'bread';
+                this.items.push(new Item(pos.x, pos.y, foodType));
+            }
         }
-    }
 
-    // Spawn scrolls
-    const numScrolls = 1 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < numScrolls; i++) {
-        const pos = this.dungeon.getRandomFloorPosition();
-        if (pos.x !== this.player.x || pos.y !== this.player.y) {
-            const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment'];
-            const scrollType = scrollTypes[Math.floor(Math.random() * scrollTypes.length)];
-            this.items.push(new Item(pos.x, pos.y, scrollType));
+        // Spawn scrolls
+        const numScrolls = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < numScrolls; i++) {
+            const pos = this.dungeon.getRandomFloorPosition();
+            if (pos.x !== this.player.x || pos.y !== this.player.y) {
+                const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment'];
+                const scrollType = scrollTypes[Math.floor(Math.random() * scrollTypes.length)];
+                this.items.push(new Item(pos.x, pos.y, scrollType));
+            }
         }
-    }
 
-    this.updateUI();
-}
+        // Place shop
+        this.shopPosition = this.dungeon.placeShop();
+
+        this.updateUI();
+    }
 
 
     endGame(victory) {
@@ -650,6 +724,8 @@ goToPreviousLevel() {
         document.getElementById('level').textContent = this.currentLevel;
         document.getElementById('depth').textContent = this.currentLevel;
         document.getElementById('gold').textContent = this.player.gold;
+        document.getElementById('attack').textContent = this.player.attack;
+        document.getElementById('defense').textContent = this.player.defense;
         document.getElementById('hunger').textContent = `${this.player.hunger}/${this.player.maxHunger}`;
 
         // Update health color
@@ -676,7 +752,7 @@ goToPreviousLevel() {
     }
 
     render() {
-        this.renderer.render(this.dungeon, this.player, this.monsters, this.items);
+        this.renderer.render(this, this.dungeon, this.player, this.monsters, this.items);
     }
 
     handleScrollEffect(scrollType, scrollName) {
@@ -732,6 +808,96 @@ goToPreviousLevel() {
                 this.sound.playEquip();
                 break;
         }
+    }
+
+    openShop() {
+        this.shopOpen = true;
+        this.sound.playShop();
+
+        const shopOverlay = document.getElementById('shop-overlay');
+        const shopGoldAmount = document.getElementById('shop-gold-amount');
+        const shopClose = document.getElementById('shop-close');
+
+        // Update gold display
+        shopGoldAmount.textContent = this.player.gold;
+
+        // Show shop
+        shopOverlay.classList.remove('hidden');
+
+        // Setup shop item click handlers
+        const shopItems = document.querySelectorAll('.shop-item');
+        shopItems.forEach(item => {
+            // Remove existing listeners by cloning
+            const newItem = item.cloneNode(true);
+            item.parentNode.replaceChild(newItem, item);
+
+            newItem.addEventListener('click', () => {
+                const itemType = newItem.getAttribute('data-item');
+                const price = parseInt(newItem.getAttribute('data-price'));
+                this.purchaseItem(itemType, price);
+            });
+        });
+
+        // Setup close button
+        const newCloseBtn = shopClose.cloneNode(true);
+        shopClose.parentNode.replaceChild(newCloseBtn, shopClose);
+        newCloseBtn.addEventListener('click', () => {
+            this.closeShop();
+        });
+
+        // Setup ESC key to close shop
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeShop();
+                window.removeEventListener('keydown', escHandler);
+            }
+        };
+        window.addEventListener('keydown', escHandler);
+
+        this.addMessage('Welcome to the shop! Press B or ESC to close.');
+    }
+
+    closeShop() {
+        this.shopOpen = false;
+        const shopOverlay = document.getElementById('shop-overlay');
+        shopOverlay.classList.add('hidden');
+    }
+
+    purchaseItem(itemType, price) {
+        if (this.player.gold < price) {
+            this.addMessage('Not enough gold!');
+            return;
+        }
+
+        this.player.gold -= price;
+        this.sound.playPurchase();
+
+        switch (itemType) {
+            case 'health_potion':
+                this.player.heal(10);
+                this.addMessage(`Purchased Health Potion for ${price} gold. +10 HP!`);
+                break;
+            case 'rations':
+                this.player.eat(30);
+                this.addMessage(`Purchased Rations for ${price} gold. Hunger restored!`);
+                break;
+            case 'bread':
+                this.player.eat(20);
+                this.addMessage(`Purchased Bread for ${price} gold. Hunger restored!`);
+                break;
+            case 'attack_upgrade':
+                this.player.attack += 1;
+                this.addMessage(`Purchased Attack Upgrade for ${price} gold. Attack +1!`);
+                break;
+            case 'defense_upgrade':
+                this.player.defense += 1;
+                this.addMessage(`Purchased Defense Upgrade for ${price} gold. Defense +1!`);
+                break;
+        }
+
+        // Update shop gold display
+        document.getElementById('shop-gold-amount').textContent = this.player.gold;
+        this.updateUI();
     }
 
     // Helper function to select monster type based on dungeon depth

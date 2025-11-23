@@ -124,6 +124,14 @@ class SoundManager {
     playWait() {
         this.playTone(150, 0.08, 'sine', 0.15);
     }
+
+    playShop() {
+        this.playSequence([400, 500], 0.1, 'sine', 0.3);
+    }
+
+    playPurchase() {
+        this.playSequence([500, 600, 700], 0.08, 'sine', 0.3);
+    }
 }
 
 

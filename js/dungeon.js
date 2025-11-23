@@ -9,7 +9,8 @@ class DungeonGenerator {
             FLOOR: '.',
             DOOR: '+',
             STAIRS_DOWN: '>',
-            STAIRS_UP: '<'
+            STAIRS_UP: '<',
+            SHOP: '&'
         };
     }
 
@@ -82,6 +83,20 @@ class DungeonGenerator {
         }
     }
 
+    // Place shop in a random room (called from game.js)
+    placeShop() {
+        if (this.rooms.length > 1) {
+            // Pick a random room (not first or last)
+            const roomIndex = Math.floor(Math.random() * (this.rooms.length - 2)) + 1;
+            const room = this.rooms[roomIndex];
+            const shopX = room.x + Math.floor(room.width / 2);
+            const shopY = room.y + Math.floor(room.height / 2);
+            this.grid[shopY][shopX] = this.tiles.SHOP;
+            return { x: shopX, y: shopY };
+        }
+        return null;
+    }
+
     roomsOverlap(room1, room2) {
         return room1.x < room2.x + room2.width + 1 &&
             room1.x + room1.width + 1 > room2.x &&
@@ -126,7 +141,7 @@ class DungeonGenerator {
     isWalkable(x, y) {
         const tile = this.getTile(x, y);
         return tile === this.tiles.FLOOR || tile === this.tiles.DOOR ||
-            tile === this.tiles.STAIRS_DOWN || tile === this.tiles.STAIRS_UP;
+            tile === this.tiles.STAIRS_DOWN || tile === this.tiles.STAIRS_UP || tile === this.tiles.SHOP;
     }
 
     getRandomFloorPosition() {

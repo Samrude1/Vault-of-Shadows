@@ -20,7 +20,7 @@ class Renderer {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    render(dungeon, player, monsters, items) {
+    render(game, dungeon, player, monsters, items) {
         this.clear();
 
         // Calculate camera offset to center on player
@@ -41,14 +41,14 @@ class Renderer {
 
                 if (dungeonX >= 0 && dungeonX < dungeon.width && dungeonY >= 0 && dungeonY < dungeon.height) {
                     const tile = dungeon.getTile(dungeonX, dungeonY);
-                    this.drawTile(x * this.tileSize, y * this.tileSize, tile);
+                    this.drawTileWithFog(x * this.tileSize, y * this.tileSize, tile, game.isVisible(dungeonX, dungeonY), game.isExplored(dungeonX, dungeonY));
                 }
             }
         }
 
         // Render items
         items.forEach(item => {
-            if (!item.pickedUp) {
+            if (!item.pickedUp && game.isVisible(item.x, item.y)) {
                 const screenX = (item.x - cameraX) * this.tileSize;
                 const screenY = (item.y - cameraY) * this.tileSize;
                 if (this.isOnScreen(screenX, screenY)) {
@@ -59,7 +59,7 @@ class Renderer {
 
         // Render monsters
         monsters.forEach(monster => {
-            if (monster.isAlive()) {
+            if (monster.isAlive() && game.isVisible(monster.x, monster.y)) {
                 const screenX = (monster.x - cameraX) * this.tileSize;
                 const screenY = (monster.y - cameraY) * this.tileSize;
                 if (this.isOnScreen(screenX, screenY)) {
@@ -104,9 +104,89 @@ class Renderer {
                 char = '>';
                 color = '#ffaa00';
                 break;
+            case '<':
+                char = '<';
+                color = '#ffaa00';
+                break;
+            case '<':
+                char = '<';
+                color = '#ffaa00';
+                break;
         }
 
         this.drawEntity(x, y, char, color);
+    }
+
+    drawTileWithFog(x, y, tile, isVisible, isExplored) {
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(x, y, this.tileSize, this.tileSize);
+
+        let char = '';
+        let color = '#666';
+
+        // Only show tiles that are visible or explored
+        if (isVisible) {
+            // Fully visible - normal colors
+            switch (tile) {
+                case '#':
+                    char = '#';
+                    color = '#666';
+                    break;
+                case '.':
+                    char = '.';
+                    color = '#333';
+                    break;
+                case '+':
+                    char = '+';
+                    color = '#8b4513';
+                    break;
+                case '>':
+                    char = '>';
+                    color = '#ffaa00';
+                    break;
+                case '<':
+                    char = '<';
+                    color = '#ffaa00';
+                    break;
+                case '&':
+                    char = '&';
+                    color = '#00ff00';
+                    break;
+            }
+        } else if (isExplored) {
+            // Explored but not visible - dimmed
+            switch (tile) {
+                case '#':
+                    char = '#';
+                    color = '#333';
+                    break;
+                case '.':
+                    char = '.';
+                    color = '#111';
+                    break;
+                case '+':
+                    char = '+';
+                    color = '#4a2c1a';
+                    break;
+                case '>':
+                    char = '>';
+                    color = '#805500';
+                    break;
+                case '<':
+                    char = '<';
+                    color = '#805500';
+                    break;
+                case '&':
+                    char = '&';
+                    color = '#008000';
+                    break;
+            }
+        }
+        // If not visible and not explored, don't draw anything (stays black)
+
+        if (char) {
+            this.drawEntity(x, y, char, color);
+        }
     }
 
     drawEntity(x, y, symbol, color) {

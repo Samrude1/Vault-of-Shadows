@@ -29,6 +29,14 @@
                     <span id="gold">0</span>
                 </div>
                 <div class="stat">
+                    <label>Attack:</label>
+                    <span id="attack">4</span>
+                </div>
+                <div class="stat">
+                    <label>Defense:</label>
+                    <span id="defense">2</span>
+                </div>
+                <div class="stat">
                     <label>Hunger:</label>
                     <span id="hunger">100/100</span>
                 </div>
@@ -36,24 +44,51 @@
             <div id="messages"></div>
         </div>
         <canvas id="game-canvas"></canvas>
-        <div id="sound-settings">
-            <button id="settings-toggle">⚙️ Settings</button>
-            <div id="settings-panel" class="hidden">
-                <h3>Sound Settings</h3>
-                <div class="setting">
-                    <label for="volume-slider">Volume:</label>
-                    <input type="range" id="volume-slider" min="0" max="100" value="30">
-                    <span id="volume-value">30%</span>
-                </div>
-                <div class="setting">
-                    <button id="mute-toggle">🔊 Unmuted</button>
-                </div>
-            </div>
+        <div id="controls-info">
+            <span class="control-item"><strong>Move:</strong> WASD or Arrow Keys</span>
+            <span class="control-item"><strong>Diagonal:</strong> Q E Z C</span>
+            <span class="control-item"><strong>Shop:</strong> B (on & tile)</span>
+            <span class="control-item"><strong>Wait:</strong> Space</span>
         </div>
+        <button id="mute-toggle" class="mute-button">🔊</button>
         <div id="game-over" class="hidden">
             <h2>Game Over</h2>
             <p>You have died!</p>
             <button id="restart-btn">Restart Game</button>
+        </div>
+        <div id="shop-overlay" class="hidden">
+            <div id="shop-menu">
+                <h2>🏪 Shop</h2>
+                <p class="shop-gold">Your Gold: <span id="shop-gold-amount">0</span></p>
+                <div id="shop-items">
+                    <div class="shop-item" data-item="health_potion" data-price="10">
+                        <span class="shop-item-name">Health Potion</span>
+                        <span class="shop-item-desc">(Restores 10 HP)</span>
+                        <span class="shop-item-price">10 gold</span>
+                    </div>
+                    <div class="shop-item" data-item="rations" data-price="15">
+                        <span class="shop-item-name">Rations</span>
+                        <span class="shop-item-desc">(Restores 30 hunger)</span>
+                        <span class="shop-item-price">15 gold</span>
+                    </div>
+                    <div class="shop-item" data-item="bread" data-price="10">
+                        <span class="shop-item-name">Bread</span>
+                        <span class="shop-item-desc">(Restores 20 hunger)</span>
+                        <span class="shop-item-price">10 gold</span>
+                    </div>
+                    <div class="shop-item" data-item="attack_upgrade" data-price="50">
+                        <span class="shop-item-name">Attack Upgrade</span>
+                        <span class="shop-item-desc">(+1 Attack)</span>
+                        <span class="shop-item-price">50 gold</span>
+                    </div>
+                    <div class="shop-item" data-item="defense_upgrade" data-price="50">
+                        <span class="shop-item-name">Defense Upgrade</span>
+                        <span class="shop-item-desc">(+1 Defense)</span>
+                        <span class="shop-item-price">50 gold</span>
+                    </div>
+                </div>
+                <button id="shop-close">Close (ESC)</button>
+            </div>
         </div>
     </div>
     <script src="js/sound.js"></script>
