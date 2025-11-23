@@ -6,7 +6,7 @@
 
 This is a modern web implementation of Rogue, the classic dungeon crawling video game originally developed by Michael Toy and Glenn Wichman around 1980. Players explore procedurally generated dungeons, battle monsters, collect treasures, and seek the legendary Amulet of Yendor.
 
-![Vault of Shadows - Gameplay Screenshot](screenshot.png)
+![Vault of Shadows - Gameplay Screenshot](screenshot.png?v=2)
 *Explore procedurally generated dungeons, fight monsters, collect gold, and find powerful items!*
 
 ## Current Development Phase: Phase 1 (MVP) + Phase 2 Features - ✅ Complete
