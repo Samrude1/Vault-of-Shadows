@@ -1,575 +1,653 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap");
 
+/* ========================================================== */
+/* 1. OVERALL THEME (BODY) - Warm, earthy background */
+/* ========================================================== */
 body {
-    font-family: 'Nunito', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    color: #ffffff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    overflow: hidden;
-    position: relative;
+  font-family: "Nunito", sans-serif;
+  /* Warm, grounded background: Brown/Green gradient */
+  background: linear-gradient(135deg, #8B6F47 0%, #5C7C3E 100%);
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+  /* Subtle texture shadow for depth */
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
 }
 
 body::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: none;
-    pointer-events: none;
-    z-index: 0;
+  /* Removed previous glow, switched to softer appearance */
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: none;
+  pointer-events: none;
+  z-index: 0;
 }
 
 #game-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    z-index: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  z-index: 1;
 }
 
-/* Game Header Styles */
+/* ========================================================== */
+/* 2. HEADER STYLE - Playful, embossed text */
+/* ========================================================== */
 #game-header {
-    text-align: center;
-    margin-bottom: 20px;
-    animation: fadeInDown 0.8s ease-out;
+  text-align: center;
+  margin-bottom: 20px;
+  animation: fadeInDown 0.8s ease-out;
 }
 
 @keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
 
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .game-title {
-    font-family: 'Lilita One', cursive;
-    font-size: 48px;
-    margin: 0;
-    background: linear-gradient(135deg, #fbbf24 0%, #f0abfc 50%, #a5f3fc 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: 3px;
-    -webkit-text-stroke: 2px rgba(75, 50, 100, 0.8);
-    text-stroke: 2px rgba(75, 50, 100, 0.8);
+  font-family: "Lilita One", cursive;
+  font-size: 52px;
+  /* Bigger and more playful */
+  margin: 0;
+  /* Bright yellow color */
+  color: #FFE55C;
+  letter-spacing: 4px;
+  /* Clean dark border for contrast */
+  -webkit-text-stroke: 3px #2C1810;
+  text-stroke: 3px #2C1810;
+  /* Simple shadow for depth */
+  text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
 }
 
 .game-subtitle {
-    font-family: 'Nunito', sans-serif;
-    font-size: 18px;
-    font-weight: 600;
-    color: #e0e7ff;
-    margin: 8px 0 0 0;
-    letter-spacing: 1px;
-    opacity: 0.9;
-    animation: pulse 2s ease-in-out infinite;
+  font-family: "Nunito", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFF4D6;
+  /* Light cream color */
+  margin: 8px 0 0 0;
+  letter-spacing: 1px;
+  opacity: 1;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
 
-    0%,
-    100% {
-        opacity: 0.7;
-    }
+  0%,
+  100% {
+    opacity: 0.9;
+  }
 
-    50% {
-        opacity: 1;
-    }
+  50% {
+    opacity: 1;
+  }
 }
+
+/* ========================================================== */
+/* 3. GAME AREA AND INFO BOXES - Wood/Stone style */
+/* ========================================================== */
 
 #game-canvas {
-    border: 3px solid #666;
-    background: linear-gradient(135deg, #292929 0%, #3b3b3b 100%);
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    border-radius: 12px;
+  /* Border: Warm brown wood frame */
+  border: 10px solid #5A3825;
+  /* Inner border: Golden accent */
+  box-shadow: inset 0 0 0 3px #D4A574, 0 8px 20px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg,
+      #1f2937 0%,
+      #374151 100%);
+  /* Dark dungeon base */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border-radius: 16px;
 }
 
-#controls-info {
-    width: 800px;
-    margin-top: 15px;
-    padding: 15px 20px;
-    background: rgba(102, 126, 234, 0.25);
-    border: 2px solid rgba(240, 171, 252, 0.6);
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 15px;
-    box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+#controls-info,
+#legend {
+  width: 800px;
+  margin-top: 15px;
+  padding: 18px 24px;
+  /* Background: Lighter wood/stone shade */
+  background: linear-gradient(135deg, #6B4423 0%, #8B6F47 100%);
+  /* Border: Thick dark brown outline */
+  border: 5px solid #3E2815;
+  border-radius: 20px;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 15px;
+  /* Soft shadow creates lift */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.1);
 }
 
 .control-item {
-    font-size: 13px;
-    color: #e0e7ff;
-    font-weight: 600;
+  font-size: 14px;
+  color: #FFF4D6;
+  font-weight: 600;
 }
 
 .control-item strong {
-    color: #a5f3fc;
-    margin-right: 6px;
-    font-weight: 800;
+  color: #FFD700;
+  /* Gold */
+  margin-right: 6px;
+  font-weight: 800;
 }
 
 #ui {
-    width: 800px;
-    margin-bottom: 15px;
+  width: 800px;
+  margin-bottom: 15px;
 }
 
 #stats {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 15px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .stat {
-    font-size: 15px;
-    background: rgba(118, 75, 162, 0.4);
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 2px solid rgba(240, 171, 252, 0.6);
-    font-weight: 700;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(240, 171, 252, 0.2);
+  font-size: 16px;
+  /* Background: Warm orange/brown button */
+  background: linear-gradient(135deg, #D97D3A 0%, #C46B2A 100%);
+  padding: 10px 18px;
+  border-radius: 30px;
+  /* Very rounded, chunky */
+  /* Border: Thick dark outline */
+  border: 4px solid #3E2815;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  /* Shadow: Gives 3D appearance */
+  box-shadow: 0 5px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .stat:hover {
-    transform: translateY(-2px);
-    border-color: #f0abfc;
-    box-shadow: 0 4px 15px rgba(240, 171, 252, 0.4);
+  transform: translateY(-2px);
+  border-color: #2C1810;
+  box-shadow: 0 7px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.stat:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .stat label {
-    color: #e0e7ff;
-    margin-right: 6px;
-    font-weight: 600;
+  color: #FFF4D6;
+  margin-right: 6px;
+  font-weight: 700;
 }
 
 .stat span {
-    color: #a5f3fc;
-    font-weight: 800;
+  color: #FFFFFF;
+  font-weight: 800;
 }
 
-/* Special stat colors */
-#health {
-    color: #10b981 !important;
+/* Special stat colors - Bright, clear colors */
+#health span {
+  color: #7FD957 !important;
+  /* Bright green */
 }
 
-#gold {
-    color: #fbbf24 !important;
+#gold span {
+  color: #FFD700 !important;
+  /* Gold */
 }
 
-#attack {
-    color: #ef4444 !important;
+#attack span {
+  color: #FF6B6B !important;
+  /* Bright red */
 }
 
-#defense {
-    color: #3b82f6 !important;
+#defense span {
+  color: #6BAFFF !important;
+  /* Light blue */
 }
 
-#hunger {
-    color: #f59e0b !important;
+#hunger span {
+  color: #FFB84D !important;
+  /* Orange */
 }
 
 #messages {
-    height: 70px;
-    background: rgba(102, 126, 234, 0.3);
-    border: 2px solid rgba(240, 171, 252, 0.6);
-    border-radius: 12px;
-    padding: 10px 15px;
-    overflow-y: auto;
-    font-size: 13px;
-    color: #e0e7ff;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+  height: 70px;
+  /* Background: Darker brown */
+  background: linear-gradient(135deg, #4A3520 0%, #5A3825 100%);
+  /* Border: Thick dark outline */
+  border: 4px solid #3E2815;
+  border-radius: 16px;
+  padding: 12px 16px;
+  overflow-y: auto;
+  font-size: 13px;
+  color: #FFF4D6;
+  font-weight: 600;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 .message {
-    margin: 3px 0;
-    line-height: 1.4;
+  margin: 3px 0;
+  line-height: 1.4;
 }
 
 .message.new {
-    color: #a5f3fc;
-    font-weight: 700;
-    animation: messageGlow 0.5s ease-out;
+  color: #FFD700;
+  /* New messages in gold */
+  font-weight: 800;
+  animation: messageGlow 0.5s ease-out;
 }
 
 @keyframes messageGlow {
-    0% {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
 
-    100% {
-        opacity: 1;
-        transform: translateX(0);
-    }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
+/* ========================================================== */
+/* 4. GAME OVER AND BUTTONS */
+/* ========================================================== */
+
 #game-over {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(75, 50, 100, 0.98);
-    border: 3px solid rgba(240, 171, 252, 0.8);
-    border-radius: 20px;
-    padding: 40px 50px;
-    text-align: center;
-    z-index: 1000;
-    animation: popIn 0.3s ease-out;
-    box-shadow: 0 8px 30px rgba(240, 171, 252, 0.4);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Background: Warm brown wood */
+  background: linear-gradient(135deg, #6B4423 0%, #8B6F47 100%);
+  /* Border: Thick dark outline */
+  border: 6px solid #3E2815;
+  border-radius: 24px;
+  padding: 40px 50px;
+  text-align: center;
+  z-index: 1000;
+  animation: popIn 0.3s ease-out;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 2px 0 rgba(255, 255, 255, 0.1);
 }
 
 @keyframes popIn {
-    0% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 0;
-    }
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
 
-    100% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-    }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
 
 #game-over.hidden {
-    display: none;
+  display: none;
 }
 
 #game-over h2 {
-    font-family: 'Lilita One', cursive;
-    color: #ef4444;
-    margin-bottom: 15px;
-    font-size: 36px;
+  font-family: "Lilita One", cursive;
+  color: #FF6B6B;
+  /* Red for defeat */
+  margin-bottom: 15px;
+  font-size: 40px;
+  -webkit-text-stroke: 2px #2C1810;
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.4);
 }
 
 #game-over h2.victory {
-    color: #10b981;
+  color: #7FD957;
+  /* Green for victory */
 }
 
 #game-over p {
-    margin-bottom: 25px;
-    font-size: 16px;
-    color: #cbd5e1;
-    font-weight: 600;
+  margin-bottom: 25px;
+  font-size: 18px;
+  color: #FFF4D6;
+  font-weight: 600;
 }
 
 #restart-btn {
-    padding: 12px 30px;
-    font-size: 18px;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    border: 2px solid #f0abfc;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(240, 171, 252, 0.3);
+  padding: 16px 40px;
+  font-size: 20px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  /* Background: Bright green button */
+  background: linear-gradient(135deg, #7FD957 0%, #5CB830 100%);
+  color: #fff;
+  /* Border: Thick dark outline */
+  border: 5px solid #3E2815;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  /* 3D effect */
+  box-shadow: 0 6px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
 }
 
 #restart-btn:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #f093fb 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(240, 171, 252, 0.5);
+  background: linear-gradient(135deg, #8FE967 0%, #6CC840 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
 #restart-btn:active {
-    transform: translateY(0);
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(4px);
+  box-shadow: 0 2px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
 .mute-button {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 55px;
-    height: 55px;
-    font-size: 26px;
-    background: rgba(118, 75, 162, 0.9);
-    color: #f0abfc;
-    border: 2px solid rgba(240, 171, 252, 0.6);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 50;
-    box-shadow: 0 4px 15px rgba(240, 171, 252, 0.3);
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 65px;
+  height: 65px;
+  font-size: 30px;
+  /* Background: Brown wood */
+  background: linear-gradient(135deg, #8B6F47 0%, #6B4423 100%);
+  color: #FFD700;
+  /* Border: Thick dark outline */
+  border: 5px solid #3E2815;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 50;
+  box-shadow: 0 5px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .mute-button:hover {
-    background: rgba(118, 75, 162, 1);
-    border-color: #f0abfc;
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 6px 20px rgba(240, 171, 252, 0.5);
+  background: linear-gradient(135deg, #9B7F57 0%, #7B5433 100%);
+  border-color: #2C1810;
+  transform: scale(1.05) rotate(5deg);
+  box-shadow: 0 7px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .mute-button:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
+  box-shadow: 0 2px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
+/* ========================================================== */
+/* 5. SHOP - Wood frame window */
+/* ========================================================== */
+
 #shop-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(75, 50, 100, 0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 1;
-    pointer-events: auto;
-    transition: opacity 0.2s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Background: Dark, semi-transparent overlay */
+  background-color: rgba(31, 41, 55, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.2s ease;
 }
 
 #shop-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 #shop-menu {
-    background: rgba(102, 75, 150, 0.95);
-    border: 3px solid rgba(240, 171, 252, 0.8);
-    border-radius: 20px;
-    padding: 30px;
-    min-width: 450px;
-    max-width: 550px;
-    animation: popIn 0.3s ease-out;
-    box-shadow: 0 8px 30px rgba(240, 171, 252, 0.4);
+  /* Background: Lighter wood/stone shade */
+  background: linear-gradient(135deg, #8B6F47 0%, #A68A5E 100%);
+  /* Border: Thick dark outline */
+  border: 6px solid #3E2815;
+  border-radius: 24px;
+  padding: 35px;
+  min-width: 450px;
+  max-width: 550px;
+  animation: popIn 0.3s ease-out;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 2px 0 rgba(255, 255, 255, 0.1);
 }
 
 #shop-menu h2 {
-    font-family: 'Lilita One', cursive;
-    color: #fbbf24;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 28px;
+  font-family: "Lilita One", cursive;
+  color: #FFD700;
+  /* Golden title */
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 36px;
+  -webkit-text-stroke: 2px #2C1810;
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.4);
 }
 
 .shop-gold {
-    color: #fbbf24;
-    text-align: center;
-    margin-bottom: 25px;
-    font-size: 16px;
-    font-weight: 700;
+  color: #FFD700;
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 #shop-gold-amount {
-    font-weight: 800;
-    font-size: 20px;
+  font-weight: 800;
+  font-size: 24px;
 }
 
 #shop-items {
-    margin-bottom: 25px;
+  margin-bottom: 25px;
 }
 
 .shop-item {
-    background: rgba(118, 75, 162, 0.4);
-    border: 2px solid rgba(240, 171, 252, 0.5);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(240, 171, 252, 0.2);
+  /* Background: Warm orange card */
+  background: linear-gradient(135deg, #D97D3A 0%, #C46B2A 100%);
+  border: 4px solid #3E2815;
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .shop-item:hover {
-    background: rgba(118, 75, 162, 0.6);
-    border-color: #f0abfc;
-    transform: translateX(5px);
-    box-shadow: 0 4px 15px rgba(240, 171, 252, 0.4);
+  background: linear-gradient(135deg, #E98D4A 0%, #D47B3A 100%);
+  border-color: #2C1810;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .shop-item:active {
-    transform: translateX(2px) scale(0.98);
+  transform: translateY(2px);
+  box-shadow: 0 2px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .shop-item-name {
-    color: #fff;
-    font-weight: 800;
-    flex: 1;
-    font-size: 15px;
+  color: #fff;
+  font-weight: 800;
+  flex: 1;
+  font-size: 16px;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
 }
 
 .shop-item-desc {
-    color: #e0e7ff;
-    font-size: 12px;
-    flex: 1;
-    text-align: center;
-    font-weight: 600;
+  color: #FFF4D6;
+  font-size: 13px;
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
 }
 
 .shop-item-price {
-    color: #fbbf24;
-    font-weight: 800;
-    text-align: right;
-    min-width: 80px;
-    font-size: 15px;
+  color: #FFD700;
+  font-weight: 800;
+  text-align: right;
+  min-width: 80px;
+  font-size: 16px;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
 }
 
 #shop-close {
-    width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    border: 2px solid #f0abfc;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(240, 171, 252, 0.3);
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  /* Same style as Restart button */
+  background: linear-gradient(135deg, #7FD957 0%, #5CB830 100%);
+  color: #fff;
+  border: 5px solid #3E2815;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 5px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
 }
 
 #shop-close:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #f093fb 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(240, 171, 252, 0.5);
+  background: linear-gradient(135deg, #8FE967 0%, #6CC840 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
 #shop-close:active {
-    transform: translateY(0);
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(3px);
+  box-shadow: 0 2px 0px #2C1810, inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
 .hidden {
-    display: none;
+  display: none;
 }
 
-/* Custom scrollbar for messages */
+/* Custom scrollbar for messages - Cartoon style */
 #messages::-webkit-scrollbar {
-    width: 8px;
+  width: 10px;
 }
 
 #messages::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.5);
-    border-radius: 4px;
+  background: #3E2815;
+  /* Dark brown */
+  border-radius: 5px;
 }
 
 #messages::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #f0abfc 0%, #a78bfa 100%);
-    border-radius: 4px;
+  background: linear-gradient(135deg,
+      #D4A574 0%,
+      #C49563 100%);
+  /* Golden-brown gradient */
+  border-radius: 5px;
+  border: 2px solid #3E2815;
 }
 
 #messages::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #fbbf24 0%, #f0abfc 100%);
+  background: linear-gradient(135deg, #E4B584 0%, #D4A573 100%);
 }
 
-/* Legend Styles */
+/* ========================================================== */
+/* 6. LEGEND (Map symbols) */
+/* ========================================================== */
 #legend {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: rgba(102, 126, 234, 0.25);
-    border-radius: 15px;
-    border: 2px solid rgba(240, 171, 252, 0.6);
-    flex-wrap: wrap;
-    box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+  /* Styles defined in #controls-info section */
+  margin-top: 15px;
+  padding: 15px 20px;
 }
 
 .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .legend-icon {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-family: "Segoe UI Emoji", "Noto Color Emoji", monospace;
-    font-weight: bold;
-    font-size: 14px;
-    border: 2px solid;
-    position: relative;
+  width: 32px;
+  /* Bigger icons */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: "Segoe UI Emoji", "Noto Color Emoji", monospace;
+  font-weight: bold;
+  font-size: 18px;
+  /* Border: thicker and darker */
+  border: 4px solid #3E2815;
+  position: relative;
+  /* Removed previous reflection */
 }
 
-/* Simulate the glossy token look */
 .legend-icon::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 12px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+  /* Removed shine effect */
+  content: none;
 }
 
+/* Brighter, clearer background colors for icons */
 .player-icon {
-    background-color: #0e7490;
-    color: #06b6d4;
-    border-color: #06b6d4;
+  background-color: #6BAFFF;
+  /* Blue */
+  color: #fff;
+  border-color: #3E2815;
 }
 
 .monster-icon {
-    background-color: #3f3f46;
-    color: #ef4444;
-    border-color: #ef4444;
+  background-color: #FF6B6B;
+  /* Red */
+  color: #fff;
+  border-color: #3E2815;
 }
 
 .item-icon {
-    background-color: #1e1b4b;
-    color: #fbbf24;
-    border-color: #fbbf24;
+  background-color: #FFB84D;
+  /* Orange */
+  color: #fff;
+  border-color: #3E2815;
 }
 
 .shop-icon {
-    background-color: #064e3b;
-    color: #10b981;
-    border-color: #10b981;
-    border-radius: 4px;
-    /* Shop is square-ish */
+  background-color: #7FD957;
+  /* Green */
+  color: #fff;
+  border-color: #3E2815;
+  border-radius: 6px;
 }
 
 .stairs-icon {
-    background-color: #78350f;
-    color: #fbbf24;
-    border-color: #fbbf24;
-    border-radius: 4px;
+  background-color: #8B6F47;
+  /* Medium brown */
+  color: #FFD700;
+  border-color: #3E2815;
+  border-radius: 6px;
 }
 
 .amulet-icon {
-    background-color: #4a044e;
-    color: #f0abfc;
-    border-color: #f0abfc;
+  background-color: #A855F7;
+  /* Purple/Treasure color */
+  color: #fff;
+  border-color: #3E2815;
 }
 
 .legend-label {
-    color: #e0e7ff;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
+  color: #FFF4D6;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
 }

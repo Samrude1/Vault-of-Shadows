@@ -6,7 +6,7 @@
 
 Vault of Shadows is a reimagining of the classic 1980 Rogue game, built with HTML5 Canvas and vanilla JavaScript. It combines the strategic gameplay of the original with a **modern mobile-game aesthetic**, featuring procedural graphics, atmospheric lighting, and a sleek user interface.
 
-![Vault of Shadows - Gameplay Screenshot](screenshot.png?v2)
+![Vault of Shadows - Gameplay Screenshot](screenshot.png?v3)
 _Explore dark dungeons, fight monsters, and find the Amulet of Yendor._
 
 ## Current Development Phase: Visual Overhaul (v2.3) - ✅ Complete
