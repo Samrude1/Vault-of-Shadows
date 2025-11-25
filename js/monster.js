@@ -33,7 +33,7 @@ class Monster {
                 attack: 2,
                 defense: 1,
                 symbol: 'k',
-                color: '#ffa500',
+                color: '#fbbf24', // Bright gold/yellow
                 speed: 1
             },
             orc: {
@@ -42,7 +42,7 @@ class Monster {
                 attack: 4,
                 defense: 2,
                 symbol: 'o',
-                color: '#00ff00',
+                color: '#10b981', // Vibrant green
                 speed: 1
             },
             troll: {
@@ -51,7 +51,7 @@ class Monster {
                 attack: 6,
                 defense: 3,
                 symbol: 'T',
-                color: '#800080',
+                color: '#a855f7', // Purple
                 speed: 1
             },
             bat: {
@@ -60,7 +60,7 @@ class Monster {
                 attack: 3,
                 defense: 0,
                 symbol: 'b',
-                color: '#696969',
+                color: '#8b5cf6', // Light purple
                 speed: 1,
                 canFly: true
             },
@@ -70,7 +70,7 @@ class Monster {
                 attack: 3,
                 defense: 2,
                 symbol: 's',
-                color: '#ffffff',
+                color: '#f0f9ff', // Bright white/cyan
                 speed: 0.5 // Moves every other turn
             },
             goblin: {
@@ -79,7 +79,7 @@ class Monster {
                 attack: 2,
                 defense: 1,
                 symbol: 'g',
-                color: '#32cd32',
+                color: '#22c55e', // Lime green
                 speed: 1,
                 fleeThreshold: 0.3 // Flees when health below 30%
             },
@@ -89,7 +89,7 @@ class Monster {
                 attack: 10,
                 defense: 5,
                 symbol: 'D',
-                color: '#ff4500',
+                color: '#ef4444', // Bright red
                 speed: 1,
                 areaDamage: true
             },
@@ -99,7 +99,7 @@ class Monster {
                 attack: 4,
                 defense: 1,
                 symbol: 'z',
-                color: '#98fb98',
+                color: '#84cc16', // Lime/yellow-green
                 speed: 1,
                 regeneration: 1 // Regenerates 1 HP per turn
             }

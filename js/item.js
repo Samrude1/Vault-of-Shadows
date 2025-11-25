@@ -22,14 +22,14 @@ class Item {
             health_potion: {
                 name: 'Health Potion',
                 symbol: '!',
-                color: '#ff0000',
+                color: '#ef4444', // Bright red
                 description: 'Restores health'
             },
             // Weapons
             dagger: {
                 name: 'Dagger',
                 symbol: '/',
-                color: '#c0c0c0',
+                color: '#94a3b8', // Silver/gray
                 description: 'A small blade',
                 attackBonus: 1,
                 defenseBonus: 0
@@ -37,7 +37,7 @@ class Item {
             sword: {
                 name: 'Sword',
                 symbol: '/',
-                color: '#ffff00',
+                color: '#fbbf24', // Bright gold
                 description: 'A balanced weapon',
                 attackBonus: 2,
                 defenseBonus: 0
@@ -45,7 +45,7 @@ class Item {
             mace: {
                 name: 'Mace',
                 symbol: '/',
-                color: '#8b7355',
+                color: '#78716c', // Brown
                 description: 'A heavy blunt weapon',
                 attackBonus: 2,
                 defenseBonus: 0
@@ -53,7 +53,7 @@ class Item {
             axe: {
                 name: 'Axe',
                 symbol: '/',
-                color: '#ff6347',
+                color: '#f97316', // Bright orange
                 description: 'A powerful chopping weapon',
                 attackBonus: 3,
                 defenseBonus: 0
@@ -61,7 +61,7 @@ class Item {
             magic_staff: {
                 name: 'Magic Staff',
                 symbol: '/',
-                color: '#9370db',
+                color: '#a855f7', // Purple
                 description: 'A mystical weapon',
                 attackBonus: 2,
                 defenseBonus: 1
@@ -70,7 +70,7 @@ class Item {
             leather_armor: {
                 name: 'Leather Armor',
                 symbol: ']',
-                color: '#8b4513',
+                color: '#92400e', // Brown
                 description: 'Light protective gear',
                 attackBonus: 0,
                 defenseBonus: 1
@@ -78,7 +78,7 @@ class Item {
             chain_mail: {
                 name: 'Chain Mail',
                 symbol: ']',
-                color: '#00ffff',
+                color: '#06b6d4', // Cyan
                 description: 'Medium protective gear',
                 attackBonus: 0,
                 defenseBonus: 2
@@ -86,7 +86,7 @@ class Item {
             plate_armor: {
                 name: 'Plate Armor',
                 symbol: ']',
-                color: '#b0c4de',
+                color: '#60a5fa', // Blue
                 description: 'Heavy protective gear',
                 attackBonus: 0,
                 defenseBonus: 3
@@ -94,59 +94,59 @@ class Item {
             magic_robes: {
                 name: 'Magic Robes',
                 symbol: ']',
-                color: '#9400d3',
+                color: '#c026d3', // Magenta
                 description: 'Enchanted protective robes',
                 attackBonus: 1,
                 defenseBonus: 2
             },
             amulet: {
                 name: 'Amulet of Yendor',
-                symbol: '"',
-                color: '#ff00ff',
+                symbol: '\"',
+                color: '#f0abfc', // Pink/magenta
                 description: 'The legendary Amulet of Yendor!'
             },
             gold: {
                 name: 'Gold',
                 symbol: '$',
-                color: '#ffd700',
+                color: '#fbbf24', // Bright gold
                 description: 'Shiny gold coins'
             },
             rations: {
                 name: 'Rations',
                 symbol: '%',
-                color: '#8b4513',
+                color: '#92400e', // Brown
                 description: 'Dried food rations',
                 hungerRestore: 30
             },
             bread: {
                 name: 'Bread',
                 symbol: '%',
-                color: '#f5deb3',
+                color: '#fde047', // Light yellow
                 description: 'Fresh bread',
                 hungerRestore: 20
             },
             scroll_teleport: {
                 name: 'Scroll of Teleportation',
                 symbol: '?',
-                color: '#00ffff',
+                color: '#06b6d4', // Cyan
                 description: 'Teleports you to a random location'
             },
             scroll_magic_missile: {
                 name: 'Scroll of Magic Missile',
                 symbol: '?',
-                color: '#9370db',
+                color: '#a855f7', // Purple
                 description: 'Damages nearby enemies'
             },
             scroll_healing: {
                 name: 'Scroll of Healing',
                 symbol: '?',
-                color: '#90ee90',
+                color: '#22c55e', // Green
                 description: 'Restores health'
             },
             scroll_enchantment: {
                 name: 'Scroll of Enchantment',
                 symbol: '?',
-                color: '#ffd700',
+                color: '#fbbf24', // Gold
                 description: 'Permanently improves your abilities'
             }
         };

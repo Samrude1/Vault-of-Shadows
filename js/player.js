@@ -7,7 +7,7 @@ class Player {
         this.attack = 4;
         this.defense = 2;
         this.symbol = '@';
-        this.color = '#fff';
+        this.color = '#06b6d4'; // Bright cyan - hero color
         this.gold = 0;
 
         // Hunger system
