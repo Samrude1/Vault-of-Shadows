@@ -201,11 +201,19 @@ class Renderer {
         const stepH = (s - 8) / steps;
 
         for (let i = 0; i < steps; i++) {
-            const width = s - 8 - (i * 4);
-            const offsetX = 4 + (i * 2);
-            const offsetY = 4 + (i * stepH);
-
-            ctx.fillRect(x + offsetX, y + offsetY, width, stepH);
+            if (isDown) {
+                // Stairs going down: steps get narrower as they descend
+                const width = s - 8 - (i * 4);
+                const offsetX = 4 + (i * 2);
+                const offsetY = 4 + (i * stepH);
+                ctx.fillRect(x + offsetX, y + offsetY, width, stepH);
+            } else {
+                // Stairs going up: steps get wider as they ascend (reverse order)
+                const width = s - 8 - ((steps - 1 - i) * 4);
+                const offsetX = 4 + ((steps - 1 - i) * 2);
+                const offsetY = 4 + (i * stepH);
+                ctx.fillRect(x + offsetX, y + offsetY, width, stepH);
+            }
         }
     }
 

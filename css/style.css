@@ -309,10 +309,14 @@ body::before {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.2s ease;
 }
 
 #shop-overlay.hidden {
-    display: none;
+    opacity: 0;
+    pointer-events: none;
 }
 
 #shop-menu {
