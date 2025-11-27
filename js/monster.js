@@ -19,9 +19,25 @@ class Monster {
         this.canFly = stats.canFly || false;
         this.fleeThreshold = stats.fleeThreshold || 0;
         this.areaDamage = stats.areaDamage || false;
+        this.areaRadius = stats.areaRadius || 0;
+        this.areaDamageAmount = stats.areaDamageAmount || 0;
         this.regeneration = stats.regeneration || 0;
 
-        // Turn counter for slow monsters (skeletons)
+        // Boss-specific properties
+        this.isBoss = stats.isBoss || false;
+        this.summonType = stats.summonType || null;
+        this.summonThreshold = stats.summonThreshold || 0;
+        this.summonCount = stats.summonCount || 0;
+        this.hasSummoned = false; // Track if boss has summoned
+        this.enrageThreshold = stats.enrageThreshold || 0;
+        this.enrageBonus = stats.enrageBonus || 0;
+        this.isEnraged = false;
+        this.summonInterval = stats.summonInterval || 0;
+        this.teleportChance = stats.teleportChance || 0;
+        this.shieldTurns = stats.shieldTurns || false;
+        this.shieldActive = false;
+
+        // Turn counter for slow monsters (skeletons) and boss abilities
         this.turnCounter = 0;
     }
 
@@ -102,22 +118,169 @@ class Monster {
                 color: '#84cc16', // Lime/yellow-green
                 speed: 1,
                 regeneration: 1 // Regenerates 1 HP per turn
+            },
+            // BOSS MONSTERS
+            kobold_king: {
+                name: 'Kobold King',
+                health: 30,
+                attack: 5,
+                defense: 2,
+                symbol: 'K',
+                color: '#f59e0b', // Orange
+                speed: 1,
+                isBoss: true,
+                summonType: 'kobold',
+                summonThreshold: 0.5, // Summons at 50% HP
+                summonCount: 2
+            },
+            orc_warlord: {
+                name: 'Orc Warlord',
+                health: 50,
+                attack: 8,
+                defense: 4,
+                symbol: 'O',
+                color: '#dc2626', // Red
+                speed: 1,
+                isBoss: true,
+                enrageThreshold: 0.3, // Enrages at 30% HP
+                enrageBonus: 2
+            },
+            lich: {
+                name: 'Lich',
+                health: 60,
+                attack: 10,
+                defense: 3,
+                symbol: 'L',
+                color: '#8b5cf6', // Purple
+                speed: 1,
+                isBoss: true,
+                summonType: 'skeleton',
+                summonInterval: 3, // Summons every 3 turns
+                summonCount: 2,
+                teleportChance: 0.2 // 20% chance to teleport when hit
+            },
+            amulet_guardian: {
+                name: 'Amulet Guardian',
+                health: 80,
+                attack: 12,
+                defense: 5,
+                symbol: 'G',
+                color: '#fbbf24', // Gold
+                speed: 1,
+                isBoss: true,
+                shieldTurns: true // Shield every other turn
+            },
+            ancient_dragon: {
+                name: 'Ancient Dragon',
+                health: 100,
+                attack: 15,
+                defense: 6,
+                symbol: 'Ð',
+                color: '#dc2626', // Dark red
+                speed: 1,
+                isBoss: true,
+                canFly: true,
+                areaDamage: true,
+                areaRadius: 3,
+                areaDamageAmount: 5
             }
         };
         return types[type] || types.kobold;
     }
 
     takeDamage(amount) {
+        // Boss shield: Amulet Guardian reduces damage by 50% when shield is active
+        if (this.type === 'amulet_guardian' && this.shieldActive) {
+            amount = Math.floor(amount * 0.5);
+        }
+
+        // Lich teleport: 20% chance to teleport when hit
+        if (this.type === 'lich' && this.teleportChance > 0) {
+            if (Math.random() < this.teleportChance) {
+                this.shouldTeleport = true; // Signal to game.js
+            }
+        }
+
+        // Check for boss summon threshold (Kobold King)
+        if (this.type === 'kobold_king' && !this.hasSummoned && this.summonThreshold > 0) {
+            const healthPercent = this.health / this.maxHealth;
+            if (healthPercent < this.summonThreshold) {
+                this.hasSummoned = true;
+                this.shouldSummon = true; // Signal to game.js
+            }
+        }
+
         this.health -= amount;
         if (this.health < 0) {
             this.health = 0;
         }
-        return this.health <= 0;
+
+        return {
+            killed: this.health <= 0,
+            dodged: false,
+            damage: amount
+        };
     }
 
     attackTarget(target) {
-        const damage = Math.max(1, this.attack - target.defense + Math.floor(Math.random() * 3));
-        return target.takeDamage(damage);
+        let attackPower = this.attack; // Käytetään bonusvahinkona
+
+        // 1. Nopanheitto: Laske perusvahinko esim. 1d4 (1-4)
+        // TÄMÄ RIVI KORVAA VANHAN:
+        const damageRoll = Utils.rollDice(1, 4);
+
+        // 2. Laske todellinen perusvahinko: Nopan tulos + Attack-bonus - Defense
+        const baseDamage = Math.max(
+            1,
+            damageRoll + attackPower - target.defense
+        );
+
+        // Critical hit: 10% chance for 2x damage
+        const isCrit = Math.random() < 0.10;
+        const damage = isCrit ? baseDamage * 2 : baseDamage;
+
+        // Vahingon kohdistaminen
+        const result = target.takeDamage(damage);
+
+        // Tulosten käsittely
+        const actualKilled = result.killed;
+        const actualDamage = result.dodged ? 0 : damage;
+
+        // Status effects (ei muutoksia tässä osassa)
+        let statusEffect = null;
+
+        // ... (Zombie, Troll, Dragon jne. logiikka) ...
+
+        // Status effects
+        // Zombie: 30% chance to poison on hit
+        if (this.type === 'zombie' && Math.random() < 0.30) {
+            statusEffect = { type: 'poison', duration: 5 };
+        }
+
+        // Troll: 20% chance to stun on hit
+        if (this.type === 'troll' && Math.random() < 0.20) {
+            statusEffect = { type: 'stun', duration: 1 };
+        }
+
+        // Dragon: burn on hit (if area damage is active, handled separately)
+        if (this.type === 'dragon' && Math.random() < 0.40) {
+            statusEffect = { type: 'burn', duration: 3 };
+        }
+
+        // Ancient Dragon: burn on hit
+        if (this.type === 'ancient_dragon' && Math.random() < 0.50) {
+            statusEffect = { type: 'burn', duration: 3 };
+        }
+
+        console.log(`Monster attacks for ${damage} damage (crit: ${isCrit})`);
+
+        return {
+            killed: actualKilled,
+            damage: actualDamage,
+            isCrit: isCrit,
+            dodged: result.dodged || false,
+            statusEffect: statusEffect
+        };
     }
 
     isAlive() {
@@ -173,6 +336,37 @@ class Monster {
                 goldMax: 20,
                 itemChance: 0.10, // 10% chance
                 possibleItems: ['health_potion', 'mace', 'chain_mail']
+            },
+            // BOSS DROP TABLES
+            kobold_king: {
+                goldMin: 100,
+                goldMax: 150,
+                itemChance: 1.0, // 100% guaranteed
+                possibleItems: ['sword', 'chain_mail']
+            },
+            orc_warlord: {
+                goldMin: 150,
+                goldMax: 200,
+                itemChance: 1.0, // 100% guaranteed
+                possibleItems: ['axe', 'plate_armor']
+            },
+            lich: {
+                goldMin: 200,
+                goldMax: 300,
+                itemChance: 1.0, // 100% guaranteed
+                possibleItems: ['magic_staff', 'magic_robes', 'scroll_fireball', 'scroll_freeze']
+            },
+            amulet_guardian: {
+                goldMin: 250,
+                goldMax: 400,
+                itemChance: 1.0, // 100% guaranteed - drops Amulet
+                possibleItems: ['amulet'] // Special case
+            },
+            ancient_dragon: {
+                goldMin: 300,
+                goldMax: 500,
+                itemChance: 1.0, // 100% guaranteed
+                possibleItems: ['axe', 'magic_staff', 'plate_armor', 'magic_robes']
             }
         };
         return dropTables[type] || dropTables.kobold;
@@ -203,9 +397,79 @@ class Monster {
 
     // AI: move towards player with unique behaviors per monster type
     act(player, dungeon, monsters) {
+        // Increment turn counter for boss abilities
+        this.turnCounter++;
+
+        // Boss AI: Always aggressive, always pursues player
+        if (this.isBoss) {
+            // Orc Warlord: Enrage when health is low
+            if (this.type === 'orc_warlord' && !this.isEnraged && this.enrageThreshold > 0) {
+                const healthPercent = this.health / this.maxHealth;
+                if (healthPercent < this.enrageThreshold) {
+                    this.isEnraged = true;
+                    this.attack += this.enrageBonus;
+                    // Return a signal that the boss enraged (will be handled in game.js)
+                    this.justEnraged = true;
+                }
+            }
+
+            // Amulet Guardian: Toggle shield every other turn
+            if (this.type === 'amulet_guardian' && this.shieldTurns) {
+                this.shieldActive = (this.turnCounter % 2 === 0);
+            }
+
+            // Lich: Summon skeletons every N turns
+            if (this.type === 'lich' && this.summonInterval > 0) {
+                if (this.turnCounter % this.summonInterval === 0) {
+                    this.shouldSummon = true; // Signal to game.js to spawn minions
+                }
+            }
+
+            // Bosses always move towards player (no random movement)
+            const dx = Math.sign(player.x - this.x);
+            const dy = Math.sign(player.y - this.y);
+
+            const distX = Math.abs(player.x - this.x);
+            const distY = Math.abs(player.y - this.y);
+
+            let moveX = 0;
+            let moveY = 0;
+
+            if (distX > distY) {
+                moveX = dx;
+            } else if (distY > distX) {
+                moveY = dy;
+            } else {
+                moveX = dx;
+            }
+
+            const newX = this.x + moveX;
+            const newY = this.y + moveY;
+
+            // Ancient Dragon can fly through walls
+            if (this.canFly && Math.random() < 0.3) {
+                const occupied = monsters.some(m => m !== this && m.x === newX && m.y === newY && m.isAlive());
+                if (!occupied && (newX !== player.x || newY !== player.y)) {
+                    this.x = newX;
+                    this.y = newY;
+                    return;
+                }
+            }
+
+            // Normal boss movement
+            if (dungeon.isWalkable(newX, newY)) {
+                const occupied = monsters.some(m => m !== this && m.x === newX && m.y === newY && m.isAlive());
+                if (!occupied && (newX !== player.x || newY !== player.y)) {
+                    this.x = newX;
+                    this.y = newY;
+                }
+            }
+            return;
+        }
+
+        // Regular monster AI below
         // Skeleton: only moves every other turn (slow movement)
         if (this.type === 'skeleton') {
-            this.turnCounter++;
             if (this.turnCounter % 2 === 1) {
                 return; // Skip this turn
             }

@@ -1,10 +1,10 @@
+@import url("https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap");
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
-@import url("https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap");
 
 /* ========================================================== */
 /* 1. OVERALL THEME (BODY) - Warm, earthy background */
@@ -329,18 +329,6 @@ body::before {
   z-index: 1000;
   animation: popIn 0.3s ease-out;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 2px 0 rgba(255, 255, 255, 0.1);
-}
-
-@keyframes popIn {
-  0% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
 }
 
 #game-over.hidden {

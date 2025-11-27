@@ -291,6 +291,38 @@
     }
 
     playerTurn(movement) {
+        // Check if player is stunned
+        if (this.player.isStunned()) {
+            this.addMessage('You are stunned and cannot act! 💫');
+
+            // Monster turn still happens
+            this.monsterTurn();
+
+            // Process status effects (including decrementing stun)
+            const statusMessages = this.player.processStatusEffects();
+            statusMessages.forEach(msg => {
+                if (msg.type === 'poison') {
+                    this.addMessage(`💚 Poison deals ${msg.damage} damage!`);
+                } else if (msg.type === 'burn') {
+                    this.addMessage(`🔥 Burn deals ${msg.damage} damage!`);
+                } else if (msg.type === 'stun_end') {
+                    this.addMessage('You recover from being stunned.');
+                }
+            });
+
+            // Check if player is still alive
+            if (!this.player.isAlive()) {
+                this.endGame(false);
+            } else {
+                this.updateUI();
+            }
+
+            setTimeout(() => {
+                this.waitingForInput = false;
+            }, 100);
+            return;
+        }
+
         // Try to move player
         const newX = this.player.x + movement.dx;
         const newY = this.player.y + movement.dy;
@@ -307,15 +339,21 @@
 
         if (monsterAtPos) {
             // Attack monster
-            const killed = this.player.attackTarget(monsterAtPos);
-            const damage = Math.max(1, this.player.attack - monsterAtPos.defense + Math.floor(Math.random() * 3));
-            this.addMessage(`You attack the ${monsterAtPos.name} for ${damage} damage!`);
+            const result = this.player.attackTarget(monsterAtPos);
+
+            // Display attack message with crit indicator
+            let attackMsg = `You attack the ${monsterAtPos.name} for ${result.damage} damage`;
+            if (result.isCrit) {
+                attackMsg += ' 💥 CRITICAL HIT!';
+            }
+            attackMsg += '!';
+            this.addMessage(attackMsg);
             this.sound.playHit();
 
-            if (killed) {
+            if (result.killed) {
                 // Award XP for kill
                 const xpReward = this.getXPForMonster(monsterAtPos.type);
-                const leveledUp = this.player.gainXP(xpReward);
+                this.player.gainXP(xpReward);
 
                 // Generate drops from killed monster
                 const drops = monsterAtPos.generateDrops();
@@ -334,12 +372,33 @@
                 }
             } else {
                 // Monster counterattacks
-                const playerKilled = monsterAtPos.attackTarget(this.player);
-                const monsterDamage = Math.max(1, monsterAtPos.attack - this.player.defense + Math.floor(Math.random() * 3));
-                this.addMessage(`The ${monsterAtPos.name} attacks you for ${monsterDamage} damage!`);
-                this.sound.playEnemyHit();
+                const counterResult = monsterAtPos.attackTarget(this.player);
 
-                if (playerKilled) {
+                // Display counterattack message with crit/dodge indicators
+                if (counterResult.dodged) {
+                    this.addMessage(`The ${monsterAtPos.name} attacks but you DODGE! ⚡`);
+                } else {
+                    let counterMsg = `The ${monsterAtPos.name} attacks you for ${counterResult.damage} damage`;
+                    if (counterResult.isCrit) {
+                        counterMsg += ' 💥 CRITICAL!';
+                    }
+                    counterMsg += '!';
+                    this.addMessage(counterMsg);
+                    this.sound.playEnemyHit();
+
+                    // Apply status effect if any
+                    if (counterResult.statusEffect) {
+                        this.player.applyStatusEffect(
+                            counterResult.statusEffect.type,
+                            counterResult.statusEffect.duration
+                        );
+                        const effectName = counterResult.statusEffect.type.charAt(0).toUpperCase() +
+                            counterResult.statusEffect.type.slice(1);
+                        this.addMessage(`You are ${effectName}ed! 🌀`);
+                    }
+                }
+
+                if (counterResult.killed) {
                     this.endGame(false);
                     this.waitingForInput = false;
                     return;
@@ -401,6 +460,23 @@
         // Monster turn
         this.monsterTurn();
 
+        // Process status effects
+        const statusMessages = this.player.processStatusEffects();
+        statusMessages.forEach(msg => {
+            if (msg.type === 'poison') {
+                this.addMessage(`💚 Poison deals ${msg.damage} damage!`);
+            } else if (msg.type === 'burn') {
+                this.addMessage(`🔥 Burn deals ${msg.damage} damage!`);
+            } else if (msg.type === 'poison_end') {
+                this.addMessage('The poison wears off.');
+            } else if (msg.type === 'burn_end') {
+                this.addMessage('The burning subsides.');
+            } else if (msg.type === 'stun_end') {
+                this.addMessage('You recover from being stunned.');
+            }
+        });
+
+
         // Hunger system
         this.turnCounter++;
         if (this.turnCounter % this.hungerDecreaseInterval === 0) {
@@ -420,6 +496,7 @@
             this.player.takeDamage(1);
             this.addMessage('You are starving! You lose 1 health.');
         }
+
 
         // Check if player is still alive after monster turn
         if (!this.player.isAlive()) {
@@ -452,21 +529,44 @@
 
                 if (distX <= 1 && distY <= 1 && !(distX === 0 && distY === 0)) {
                     // Monster attacks player
-                    const killed = monster.attackTarget(this.player);
-                    const damage = Math.max(1, monster.attack - this.player.defense + Math.floor(Math.random() * 3));
-                    this.addMessage(`The ${monster.name} attacks you for ${damage} damage!`);
-                    this.sound.playEnemyHit();
+                    const result = monster.attackTarget(this.player);
 
-                    // Dragon area damage (hits even if not directly adjacent)
-                    if (monster.areaDamage && distX <= 2 && distY <= 2) {
-                        const areaDamage = Math.floor(damage * 0.5);
-                        if (areaDamage > 0) {
-                            this.player.takeDamage(areaDamage);
-                            this.addMessage(`The ${monster.name}'s flames scorch you for ${areaDamage} additional damage!`);
+                    // Display attack message with crit/dodge indicators
+                    if (result.dodged) {
+                        this.addMessage(`The ${monster.name} attacks but you DODGE! ⚡`);
+                    } else {
+                        let attackMsg = `The ${monster.name} attacks you for ${result.damage} damage`;
+                        if (result.isCrit) {
+                            attackMsg += ' 💥 CRITICAL!';
+                        }
+                        attackMsg += '!';
+                        this.addMessage(attackMsg);
+                        this.sound.playEnemyHit();
+
+                        // Apply status effect if any
+                        if (result.statusEffect) {
+                            this.player.applyStatusEffect(
+                                result.statusEffect.type,
+                                result.statusEffect.duration
+                            );
+                            const effectName = result.statusEffect.type.charAt(0).toUpperCase() +
+                                result.statusEffect.type.slice(1);
+                            this.addMessage(`You are ${effectName}ed! 🌀`);
                         }
                     }
 
-                    if (killed) {
+                    // Ancient Dragon area damage
+                    if (monster.type === 'ancient_dragon' && monster.areaDamage && !result.dodged) {
+                        const areaDamage = monster.areaDamageAmount;
+                        if (areaDamage > 0) {
+                            const areaResult = this.player.takeDamage(areaDamage);
+                            if (!areaResult.dodged) {
+                                this.addMessage(`The ${monster.name}'s flames scorch you for ${areaDamage} additional damage! 🔥`);
+                            }
+                        }
+                    }
+
+                    if (result.killed) {
                         this.endGame(false);
                         return;
                     }
@@ -776,6 +876,26 @@
             hungerEl.style.color = '#ffff00';
         } else {
             hungerEl.style.color = '#ff0000';
+        }
+
+        // Update status effects display
+        let statusText = '';
+        if (this.player.statusEffects.poison.active) {
+            statusText += `💚 Poison (${this.player.statusEffects.poison.duration}) `;
+        }
+        if (this.player.statusEffects.burn.active) {
+            statusText += `🔥 Burn (${this.player.statusEffects.burn.duration}) `;
+        }
+        if (this.player.statusEffects.stun.active) {
+            statusText += `💫 Stunned (${this.player.statusEffects.stun.duration}) `;
+        }
+
+        // Update status effects in messages area or create a status line
+        const healthEl2 = document.getElementById('health');
+        if (statusText) {
+            healthEl2.title = statusText.trim(); // Show as tooltip
+        } else {
+            healthEl2.title = '';
         }
     }
 

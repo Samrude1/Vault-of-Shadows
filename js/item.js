@@ -148,6 +148,43 @@ class Item {
                 symbol: '?',
                 color: '#fbbf24', // Gold
                 description: 'Permanently improves your abilities'
+            },
+            // NEW PHASE 2 SCROLLS
+            scroll_fireball: {
+                name: 'Scroll of Fireball',
+                symbol: '?',
+                color: '#f97316', // Orange
+                description: 'Launches a fireball that explodes on impact'
+            },
+            scroll_freeze: {
+                name: 'Scroll of Freeze',
+                symbol: '?',
+                color: '#38bdf8', // Light blue
+                description: 'Freezes all nearby enemies'
+            },
+            scroll_haste: {
+                name: 'Scroll of Haste',
+                symbol: '?',
+                color: '#fde047', // Yellow
+                description: 'Grants temporary speed boost'
+            },
+            scroll_identify: {
+                name: 'Scroll of Identify',
+                symbol: '?',
+                color: '#c084fc', // Light purple
+                description: 'Reveals all items on the current level'
+            },
+            scroll_mapping: {
+                name: 'Scroll of Mapping',
+                symbol: '?',
+                color: '#94a3b8', // Silver
+                description: 'Reveals the entire dungeon map'
+            },
+            scroll_summon: {
+                name: 'Scroll of Summon',
+                symbol: '?',
+                color: '#22d3ee', // Cyan
+                description: 'Summons a friendly ally to fight for you'
             }
         };
         return items[type] || items.health_potion;
@@ -189,6 +226,12 @@ class Item {
             case 'scroll_magic_missile':
             case 'scroll_healing':
             case 'scroll_enchantment':
+            case 'scroll_fireball':
+            case 'scroll_freeze':
+            case 'scroll_haste':
+            case 'scroll_identify':
+            case 'scroll_mapping':
+            case 'scroll_summon':
                 // Scrolls need game context, return scroll type for game to handle
                 return { scrollType: this.type, scrollName: this.name };
             default:
