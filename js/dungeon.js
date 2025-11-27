@@ -36,7 +36,7 @@ class DungeonGenerator {
             const x = Math.floor(Math.random() * (this.width - roomWidth - 2)) + 1;
             const y = Math.floor(Math.random() * (this.height - roomHeight - 2)) + 1;
 
-            const newRoom = { x, y, width: roomWidth, height: roomHeight };
+            const newRoom = { x, y, width: roomWidth, height: roomHeight, type: 'normal' };
 
             // Check if room overlaps with existing rooms
             let overlaps = false;
@@ -49,6 +49,12 @@ class DungeonGenerator {
 
             if (!overlaps) {
                 this.createRoom(newRoom);
+
+                // Assign special room type (skip first and last rooms)
+                if (this.rooms.length > 0 && i < maxRooms - 1) {
+                    newRoom.type = this.selectRoomType();
+                }
+
                 this.rooms.push(newRoom);
 
                 // Connect to previous room
@@ -81,6 +87,19 @@ class DungeonGenerator {
             const stairsY = firstRoom.y + Math.floor(firstRoom.height / 2);
             this.grid[stairsY][stairsX] = this.tiles.STAIRS_UP;
         }
+    }
+
+    selectRoomType() {
+        const roll = Math.random() * 100;
+
+        // Room type probabilities
+        if (roll < 3) return 'shrine';        // 3%
+        else if (roll < 8) return 'treasure';  // 5%
+        else if (roll < 13) return 'library';  // 5%
+        else if (roll < 18) return 'armory';   // 5%
+        else if (roll < 26) return 'nest';     // 8%
+        else if (roll < 36) return 'trap';     // 10%
+        else return 'normal';                   // 64%
     }
 
     // Place shop in a random room (called from game.js)
@@ -162,6 +181,16 @@ class DungeonGenerator {
 
         // Return a random floor position
         return floorPositions[Math.floor(Math.random() * floorPositions.length)];
+    }
+
+    getRoomAt(x, y) {
+        for (const room of this.rooms) {
+            if (x >= room.x && x < room.x + room.width &&
+                y >= room.y && y < room.y + room.height) {
+                return room;
+            }
+        }
+        return null;
     }
 }
 

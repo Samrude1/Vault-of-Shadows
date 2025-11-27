@@ -1,4 +1,4 @@
-﻿class Game {
+class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
         this.renderer = new Renderer(this.canvas);
@@ -35,6 +35,10 @@
 
         // Player level tracking for level-up notifications
         this.currentPlayerLevel = 1;
+
+        // Initialize modules
+        this.combat = new GameCombat(this);
+        this.rooms = new GameRooms(this);
 
         // Enable audio on first user interaction
         const enableAudio = () => {
@@ -86,7 +90,7 @@
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 if (!usedPositions.has(posKey)) {
                     usedPositions.add(posKey);
-                    const type = this.selectMonsterType(this.currentLevel);
+                    const type = this.combat.selectMonsterType(this.currentLevel);
                     this.monsters.push(new Monster(pos.x, pos.y, type));
                 } else {
                     i--; // Retry this iteration
@@ -152,9 +156,12 @@
             this.addMessage('You hear the sound of a merchant nearby...');
         }
 
+        // Populate special rooms with content
+        this.rooms.populateSpecialRooms();
+
         // Spawn boss if applicable (e.g. testing level 3 start)
-        if (this.isBossLevel(this.currentLevel)) {
-            this.spawnBoss(this.currentLevel);
+        if (this.combat.isBossLevel(this.currentLevel)) {
+            this.combat.spawnBoss(this.currentLevel);
         }
 
         this.gameOver = false;
@@ -223,7 +230,7 @@
         const muteToggle = document.getElementById('mute-toggle');
 
         // Set initial icon based on mute state
-        muteToggle.textContent = this.sound.isMuted() ? '🔇' : '🔊';
+        muteToggle.textContent = this.sound.isMuted() ? '??' : '??';
 
         // Remove any existing event listeners by cloning and replacing
         const muteClone = muteToggle.cloneNode(true);
@@ -232,7 +239,7 @@
         // Mute toggle
         muteClone.addEventListener('click', () => {
             const muted = this.sound.toggleMute();
-            muteClone.textContent = muted ? '🔇' : '🔊';
+            muteClone.textContent = muted ? '??' : '??';
         });
     }
 
@@ -280,7 +287,7 @@
         this.sound.playWait();
 
         // Monster turn
-        this.monsterTurn();
+        this.combat.monsterTurn();
 
         // Check if player is still alive after monster turn
         if (!this.player.isAlive()) {
@@ -298,18 +305,18 @@
     playerTurn(movement) {
         // Check if player is stunned
         if (this.player.isStunned()) {
-            this.addMessage('You are stunned and cannot act! 💫');
+            this.addMessage('You are stunned and cannot act! ??');
 
             // Monster turn still happens
-            this.monsterTurn();
+            this.combat.monsterTurn();
 
             // Process status effects (including decrementing stun)
             const statusMessages = this.player.processStatusEffects();
             statusMessages.forEach(msg => {
                 if (msg.type === 'poison') {
-                    this.addMessage(`💚 Poison deals ${msg.damage} damage!`);
+                    this.addMessage(`?? Poison deals ${msg.damage} damage!`);
                 } else if (msg.type === 'burn') {
-                    this.addMessage(`🔥 Burn deals ${msg.damage} damage!`);
+                    this.addMessage(`?? Burn deals ${msg.damage} damage!`);
                 } else if (msg.type === 'stun_end') {
                     this.addMessage('You recover from being stunned.');
                 }
@@ -349,7 +356,7 @@
             // Display attack message with crit indicator
             let attackMsg = `You attack the ${monsterAtPos.name} for ${result.damage} damage`;
             if (result.isCrit) {
-                attackMsg += ' 💥 CRITICAL HIT!';
+                attackMsg += ' ?? CRITICAL HIT!';
             }
             attackMsg += '!';
             this.addMessage(attackMsg);
@@ -363,7 +370,7 @@
                     monsterAtPos.x = newPos.x;
                     monsterAtPos.y = newPos.y;
                     monsterAtPos.shouldTeleport = false;
-                    this.addMessage(`The ${monsterAtPos.name} teleports away! 🌌`);
+                    this.addMessage(`The ${monsterAtPos.name} teleports away! ??`);
                 }
 
                 // Kobold King Summon (triggered by damage threshold)
@@ -374,7 +381,7 @@
 
             if (result.killed) {
                 // Award XP for kill
-                const xpReward = this.getXPForMonster(monsterAtPos.type);
+                const xpReward = this.combat.getXPForMonster(monsterAtPos.type);
                 this.player.gainXP(xpReward);
 
                 // Generate drops from killed monster
@@ -389,7 +396,7 @@
                 // Check if player leveled up
                 if (this.player.level > this.currentPlayerLevel) {
                     this.currentPlayerLevel = this.player.level;
-                    this.addMessage(`⭐ LEVEL UP! You are now level ${this.player.level}!`);
+                    this.addMessage(`? LEVEL UP! You are now level ${this.player.level}!`);
                     this.sound.playItemPickup(); // Use pickup sound for level up
                 }
             } else {
@@ -398,11 +405,11 @@
 
                 // Display counterattack message with crit/dodge indicators
                 if (counterResult.dodged) {
-                    this.addMessage(`The ${monsterAtPos.name} attacks but you DODGE! ⚡`);
+                    this.addMessage(`The ${monsterAtPos.name} attacks but you DODGE! ?`);
                 } else {
                     let counterMsg = `The ${monsterAtPos.name} attacks you for ${counterResult.damage} damage`;
                     if (counterResult.isCrit) {
-                        counterMsg += ' 💥 CRITICAL!';
+                        counterMsg += ' ?? CRITICAL!';
                     }
                     counterMsg += '!';
                     this.addMessage(counterMsg);
@@ -416,7 +423,7 @@
                         );
                         const effectName = counterResult.statusEffect.type.charAt(0).toUpperCase() +
                             counterResult.statusEffect.type.slice(1);
-                        this.addMessage(`You are ${effectName}ed! 🌀`);
+                        this.addMessage(`You are ${effectName}ed! ??`);
                     }
                 }
 
@@ -481,16 +488,16 @@
 
         // Monster turn
         if (!this.player.isHasted() || this.turnCounter % 2 === 0) {
-            this.monsterTurn();
+            this.combat.monsterTurn();
         }
 
         // Process status effects
         const statusMessages = this.player.processStatusEffects();
         statusMessages.forEach(msg => {
             if (msg.type === 'poison') {
-                this.addMessage(`💚 Poison deals ${msg.damage} damage!`);
+                this.addMessage(`?? Poison deals ${msg.damage} damage!`);
             } else if (msg.type === 'burn') {
-                this.addMessage(`🔥 Burn deals ${msg.damage} damage!`);
+                this.addMessage(`?? Burn deals ${msg.damage} damage!`);
             } else if (msg.type === 'poison_end') {
                 this.addMessage('The poison wears off.');
             } else if (msg.type === 'burn_end') {
@@ -537,77 +544,7 @@
         }, 100);
     }
 
-    monsterTurn() {
-        // Remove dead monsters
-        this.monsters = this.monsters.filter(m => m.isAlive());
 
-        // Each monster acts
-        this.monsters.forEach(monster => {
-            if (monster.isAlive()) {
-                // Handle boss abilities (summoning, enrage, etc.)
-                if (monster.isBoss) {
-                    this.handleBossAbilities(monster);
-                }
-
-                // Zombie regeneration
-                if (monster.type === 'zombie') {
-                    monster.regenerate();
-                }
-
-                // Check if monster is adjacent to player
-                const distX = Math.abs(monster.x - this.player.x);
-                const distY = Math.abs(monster.y - this.player.y);
-
-                if (distX <= 1 && distY <= 1 && !(distX === 0 && distY === 0)) {
-                    // Monster attacks player
-                    const result = monster.attackTarget(this.player);
-
-                    // Display attack message with crit/dodge indicators
-                    if (result.dodged) {
-                        this.addMessage(`The ${monster.name} attacks but you DODGE! ⚡`);
-                    } else {
-                        let attackMsg = `The ${monster.name} attacks you for ${result.damage} damage`;
-                        if (result.isCrit) {
-                            attackMsg += ' 💥 CRITICAL!';
-                        }
-                        attackMsg += '!';
-                        this.addMessage(attackMsg);
-                        this.sound.playEnemyHit();
-
-                        // Apply status effect if any
-                        if (result.statusEffect) {
-                            this.player.applyStatusEffect(
-                                result.statusEffect.type,
-                                result.statusEffect.duration
-                            );
-                            const effectName = result.statusEffect.type.charAt(0).toUpperCase() +
-                                result.statusEffect.type.slice(1);
-                            this.addMessage(`You are ${effectName}ed! 🌀`);
-                        }
-                    }
-
-                    // Ancient Dragon area damage
-                    if (monster.type === 'ancient_dragon' && monster.areaDamage && !result.dodged) {
-                        const areaDamage = monster.areaDamageAmount;
-                        if (areaDamage > 0) {
-                            const areaResult = this.player.takeDamage(areaDamage);
-                            if (!areaResult.dodged) {
-                                this.addMessage(`The ${monster.name}'s flames scorch you for ${areaDamage} additional damage! 🔥`);
-                            }
-                        }
-                    }
-
-                    if (result.killed) {
-                        this.endGame(false);
-                        return;
-                    }
-                } else {
-                    // Monster moves
-                    monster.act(this.player, this.dungeon, this.monsters);
-                }
-            }
-        });
-    }
 
     goToNextLevel() {
         this.currentLevel++;
@@ -657,7 +594,7 @@
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 if (!usedPositions.has(posKey)) {
                     usedPositions.add(posKey);
-                    const type = this.selectMonsterType(this.currentLevel);
+                    const type = this.combat.selectMonsterType(this.currentLevel);
                     this.monsters.push(new Monster(pos.x, pos.y, type));
                 } else {
                     i--; // Retry this iteration
@@ -720,95 +657,18 @@
         // Place shop
         this.shopPosition = this.dungeon.placeShop();
 
+        // Populate special rooms with content
+        this.rooms.populateSpecialRooms();
+
         // Spawn boss if applicable
-        if (this.isBossLevel(this.currentLevel)) {
-            this.spawnBoss(this.currentLevel);
+        if (this.combat.isBossLevel(this.currentLevel)) {
+            this.combat.spawnBoss(this.currentLevel);
         }
 
         this.updateUI();
     }
 
-    isBossLevel(level) {
-        return [3, 6, 9, 10, 12].includes(level);
-    }
 
-    spawnBoss(level) {
-        const bossTypes = {
-            3: 'kobold_king',
-            6: 'orc_warlord',
-            9: 'lich',
-            10: 'amulet_guardian',
-            12: 'ancient_dragon'
-        };
-
-        const bossType = bossTypes[level];
-        if (!bossType) return;
-
-        // Try to place boss far from player
-        let bossPos = this.dungeon.getRandomFloorPosition();
-        let attempts = 0;
-        while (attempts < 50) {
-            const dist = Math.abs(bossPos.x - this.player.x) + Math.abs(bossPos.y - this.player.y);
-            if (dist > 10) break;
-            bossPos = this.dungeon.getRandomFloorPosition();
-            attempts++;
-        }
-
-        const boss = new Monster(bossPos.x, bossPos.y, bossType);
-        this.monsters.push(boss);
-        this.addMessage(`⚠️ You feel a powerful presence... A ${boss.name} awaits!`);
-    }
-
-    handleBossAbilities(monster) {
-        // Orc Warlord Enrage
-        if (monster.justEnraged) {
-            this.addMessage(`The ${monster.name} ROARS in anger! Attack increased! 💢`);
-            monster.justEnraged = false;
-            this.sound.playEnemyHit(); // Use a sound effect
-        }
-
-        // Lich Summoning
-        if (monster.shouldSummon) {
-            this.spawnMinions(monster, monster.summonType || 'skeleton', monster.summonCount || 2);
-            monster.shouldSummon = false;
-            this.addMessage(`The ${monster.name} summons minions! 💀`);
-        }
-
-        // Kobold King Summoning (handled in takeDamage usually, but checked here too)
-        if (monster.shouldSummon && monster.type === 'kobold_king') {
-            this.spawnMinions(monster, 'kobold', 2);
-            monster.shouldSummon = false;
-            this.addMessage(`The ${monster.name} calls for help! 📢`);
-        }
-
-        // Amulet Guardian Shield
-        if (monster.type === 'amulet_guardian' && monster.shieldActive) {
-            this.addMessage(`The ${monster.name} is protected by a shimmering shield! 🛡️`);
-        }
-    }
-
-    spawnMinions(boss, type, count) {
-        let spawned = 0;
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                if (spawned >= count) return;
-                if (dx === 0 && dy === 0) continue;
-
-                const x = boss.x + dx;
-                const y = boss.y + dy;
-
-                if (this.dungeon.isWalkable(x, y)) {
-                    const occupied = this.monsters.some(m => m.x === x && m.y === y && m.isAlive()) ||
-                        (this.player.x === x && this.player.y === y);
-
-                    if (!occupied) {
-                        this.monsters.push(new Monster(x, y, type));
-                        spawned++;
-                    }
-                }
-            }
-        }
-    }
 
     goToPreviousLevel() {
         if (this.currentLevel <= 1) {
@@ -861,7 +721,7 @@
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 if (!usedPositions.has(posKey)) {
                     usedPositions.add(posKey);
-                    const type = this.selectMonsterType(this.currentLevel);
+                    const type = this.combat.selectMonsterType(this.currentLevel);
                     this.monsters.push(new Monster(pos.x, pos.y, type));
                 } else {
                     i--;
@@ -913,6 +773,9 @@
 
         // Place shop
         this.shopPosition = this.dungeon.placeShop();
+
+        // Populate special rooms with content
+        this.populateSpecialRooms();
 
         this.updateUI();
     }
@@ -999,13 +862,13 @@
         // Update status effects display
         let statusText = '';
         if (this.player.statusEffects.poison.active) {
-            statusText += `💚 Poison (${this.player.statusEffects.poison.duration}) `;
+            statusText += `?? Poison (${this.player.statusEffects.poison.duration}) `;
         }
         if (this.player.statusEffects.burn.active) {
-            statusText += `🔥 Burn (${this.player.statusEffects.burn.duration}) `;
+            statusText += `?? Burn (${this.player.statusEffects.burn.duration}) `;
         }
         if (this.player.statusEffects.stun.active) {
-            statusText += `💫 Stunned (${this.player.statusEffects.stun.duration}) `;
+            statusText += `?? Stunned (${this.player.statusEffects.stun.duration}) `;
         }
 
         // Update status effects in messages area or create a status line
@@ -1030,7 +893,7 @@
                 const newPos = this.dungeon.getRandomFloorPosition();
                 this.player.x = newPos.x;
                 this.player.y = newPos.y;
-                this.addMessage('You are teleported to a new location! 🌌');
+                this.addMessage('You are teleported to a new location! ??');
                 this.updateVisibility();
                 break;
             case 'scroll_magic_missile':
@@ -1050,10 +913,10 @@
                 if (nearest && minDist < 8) {
                     const damage = 20;
                     nearest.takeDamage(damage);
-                    this.addMessage(`A magic missile strikes the ${nearest.name} for ${damage} damage! ⚡`);
+                    this.addMessage(`A magic missile strikes the ${nearest.name} for ${damage} damage! ?`);
                     if (!nearest.isAlive()) {
                         this.addMessage(`The ${nearest.name} is killed!`);
-                        this.player.gainXP(this.getXPForMonster(nearest.type));
+                        this.player.gainXP(this.combat.getXPForMonster(nearest.type));
                     }
                 } else {
                     this.addMessage('But nothing happens.');
@@ -1061,19 +924,19 @@
                 break;
             case 'scroll_healing':
                 this.player.heal(20);
-                this.addMessage('You feel much better! 💖');
+                this.addMessage('You feel much better! ??');
                 break;
             case 'scroll_enchantment':
                 if (Math.random() < 0.5) {
                     this.player.attack += 1;
-                    this.addMessage('Your weapon glows with magical energy! (+1 Attack) ⚔️');
+                    this.addMessage('Your weapon glows with magical energy! (+1 Attack) ??');
                 } else {
                     this.player.defense += 1;
-                    this.addMessage('Your armor hardens! (+1 Defense) 🛡️');
+                    this.addMessage('Your armor hardens! (+1 Defense) ???');
                 }
                 break;
             case 'scroll_fireball':
-                this.addMessage('A massive fireball explodes around you! 🔥');
+                this.addMessage('A massive fireball explodes around you! ??');
                 let hitCount = 0;
                 this.monsters.forEach(m => {
                     if (m.isAlive()) {
@@ -1083,7 +946,7 @@
                             m.takeDamage(damage);
                             this.addMessage(`The ${m.name} is burned for ${damage} damage!`);
                             if (!m.isAlive()) {
-                                this.player.gainXP(this.getXPForMonster(m.type));
+                                this.player.gainXP(this.combat.getXPForMonster(m.type));
                             }
                             hitCount++;
                         }
@@ -1092,7 +955,7 @@
                 if (hitCount === 0) this.addMessage('The fireball hits nothing.');
                 break;
             case 'scroll_freeze':
-                this.addMessage('A freezing blast expands from you! ❄️');
+                this.addMessage('A freezing blast expands from you! ??');
                 this.monsters.forEach(m => {
                     if (m.isAlive()) {
                         const dist = Math.max(Math.abs(m.x - this.player.x), Math.abs(m.y - this.player.y));
@@ -1105,14 +968,14 @@
                 break;
             case 'scroll_haste':
                 this.player.applyStatusEffect('haste', 10);
-                this.addMessage('You feel incredibly fast! (Double speed) ⚡');
+                this.addMessage('You feel incredibly fast! (Double speed) ?');
                 break;
             case 'scroll_identify':
-                this.addMessage('You gain knowledge of the items on this floor! 📜');
+                this.addMessage('You gain knowledge of the items on this floor! ??');
                 // For now, just a message as we don't have unidentified items system fully working
                 break;
             case 'scroll_mapping':
-                this.addMessage('The layout of this level is revealed! 🗺️');
+                this.addMessage('The layout of this level is revealed! ???');
                 for (let y = 0; y < this.dungeonHeight; y++) {
                     for (let x = 0; x < this.dungeonWidth; x++) {
                         this.explored[y][x] = true;
@@ -1121,7 +984,7 @@
                 this.updateVisibility();
                 break;
             case 'scroll_summon':
-                this.addMessage('You summon a friendly Spirit! 👻');
+                this.addMessage('You summon a friendly Spirit! ??');
                 // Deal damage to a random enemy as a "summoned ally attack"
                 let target = null;
                 this.monsters.forEach(m => {
@@ -1131,7 +994,7 @@
                     target.takeDamage(10);
                     this.addMessage(`The Spirit attacks the ${target.name} for 10 damage!`);
                     if (!target.isAlive()) {
-                        this.player.gainXP(this.getXPForMonster(target.type));
+                        this.player.gainXP(this.combat.getXPForMonster(target.type));
                     }
                 }
                 break;
@@ -1229,117 +1092,7 @@
     }
 
     // Helper function to select monster type based on dungeon depth
-    selectMonsterType(level) {
-        // Rebalanced distributions for smoother difficulty curve
-        const distributions = {
-            // Levels 1-3: Easy (Kobolds, Bats, Goblins)
-            1: [
-                { type: 'kobold', weight: 60 },
-                { type: 'bat', weight: 25 },
-                { type: 'goblin', weight: 15 }
-            ],
-            2: [
-                { type: 'kobold', weight: 60 },
-                { type: 'bat', weight: 25 },
-                { type: 'goblin', weight: 15 }
-            ],
-            3: [
-                { type: 'kobold', weight: 60 },
-                { type: 'bat', weight: 25 },
-                { type: 'goblin', weight: 15 }
-            ],
-            // Levels 4-6: Medium (add Skeletons, Orcs)
-            4: [
-                { type: 'kobold', weight: 30 },
-                { type: 'bat', weight: 15 },
-                { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'orc', weight: 15 }
-            ],
-            5: [
-                { type: 'kobold', weight: 30 },
-                { type: 'bat', weight: 15 },
-                { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'orc', weight: 15 }
-            ],
-            6: [
-                { type: 'kobold', weight: 30 },
-                { type: 'bat', weight: 15 },
-                { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'orc', weight: 15 }
-            ],
-            // Levels 7-9: Hard (add Trolls, Zombies)
-            7: [
-                { type: 'orc', weight: 25 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'goblin', weight: 15 },
-                { type: 'troll', weight: 20 },
-                { type: 'zombie', weight: 20 }
-            ],
-            8: [
-                { type: 'orc', weight: 25 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'goblin', weight: 15 },
-                { type: 'troll', weight: 20 },
-                { type: 'zombie', weight: 20 }
-            ],
-            9: [
-                { type: 'orc', weight: 25 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'goblin', weight: 15 },
-                { type: 'troll', weight: 20 },
-                { type: 'zombie', weight: 20 }
-            ]
-        };
 
-        // For levels 10+, use very hard distribution (Dragons appear)
-        const deepDistribution = [
-            { type: 'troll', weight: 25 },
-            { type: 'zombie', weight: 25 },
-            { type: 'skeleton', weight: 15 },
-            { type: 'orc', weight: 15 },
-            { type: 'dragon', weight: 20 }
-        ];
-
-        const distribution = level >= 10 ? deepDistribution : (distributions[level] || distributions[1]);
-
-        // Calculate total weight
-        const totalWeight = distribution.reduce((sum, item) => sum + item.weight, 0);
-
-        // Random selection based on weights
-        let random = Math.random() * totalWeight;
-        for (const item of distribution) {
-            random -= item.weight;
-            if (random <= 0) {
-                return item.type;
-            }
-        }
-
-        return 'kobold'; // Fallback
-    }
-
-    // Helper function to get XP reward for killing a monster
-    getXPForMonster(monsterType) {
-        const xpTable = {
-            kobold: 10,
-            bat: 8,
-            goblin: 12,
-            skeleton: 15,
-            orc: 20,
-            troll: 35,
-            zombie: 30,
-            dragon: 100,
-            // Bosses (to be added later)
-            kobold_king: 150,
-            orc_warlord: 250,
-            lich: 350,
-            ancient_dragon: 500,
-            amulet_guardian: 400
-        };
-        return xpTable[monsterType] || 10; // Default to 10 XP
-    }
 }
 
 // Start the game when page loads

@@ -185,6 +185,12 @@ class Item {
                 symbol: '?',
                 color: '#22d3ee', // Cyan
                 description: 'Summons a friendly ally to fight for you'
+            },
+            shrine: {
+                name: 'Shrine',
+                symbol: '†',
+                color: '#fbbf24', // Gold
+                description: 'A holy shrine radiating divine energy'
             }
         };
         return items[type] || items.health_potion;
@@ -222,6 +228,13 @@ class Item {
                 const foodData = Item.getItemData(this.type);
                 player.eat(foodData.hungerRestore);
                 return `You eat the ${this.name}. You feel less hungry.`;
+            case 'shrine':
+                // Full heal + stat boost
+                player.health = player.maxHealth;
+                player.maxHealth += 5;
+                player.attack += 1;
+                player.defense += 1;
+                return `You pray at the ${this.name}. Divine light washes over you! (+5 Max HP, +1 ATK, +1 DEF)`;
             case 'scroll_teleport':
             case 'scroll_magic_missile':
             case 'scroll_healing':
