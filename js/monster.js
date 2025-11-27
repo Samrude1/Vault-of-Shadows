@@ -39,6 +39,7 @@ class Monster {
 
         // Turn counter for slow monsters (skeletons) and boss abilities
         this.turnCounter = 0;
+        this.stunned = 0;
     }
 
     static getStats(type) {
@@ -397,6 +398,11 @@ class Monster {
 
     // AI: move towards player with unique behaviors per monster type
     act(player, dungeon, monsters) {
+        if (this.stunned > 0) {
+            this.stunned--;
+            return; // Skip turn
+        }
+
         // Increment turn counter for boss abilities
         this.turnCounter++;
 

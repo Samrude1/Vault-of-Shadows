@@ -23,7 +23,8 @@ class Player {
         this.statusEffects = {
             poison: { active: false, duration: 0 },
             burn: { active: false, duration: 0 },
-            stun: { active: false, duration: 0 }
+            stun: { active: false, duration: 0 },
+            haste: { active: false, duration: 0 }
         };
     }
 
@@ -207,6 +208,15 @@ class Player {
             }
         }
 
+        // Haste is handled in game loop (double speed)
+        if (this.statusEffects.haste.active) {
+            this.statusEffects.haste.duration--;
+            if (this.statusEffects.haste.duration <= 0) {
+                this.statusEffects.haste.active = false;
+                messages.push({ type: 'haste_end' });
+            }
+        }
+
         return messages;
     }
 
@@ -214,10 +224,15 @@ class Player {
         return this.statusEffects.stun.active;
     }
 
+    isHasted() {
+        return this.statusEffects.haste.active;
+    }
+
     hasActiveStatusEffects() {
         return this.statusEffects.poison.active ||
             this.statusEffects.burn.active ||
-            this.statusEffects.stun.active;
+            this.statusEffects.stun.active ||
+            this.statusEffects.haste.active;
     }
 }
 

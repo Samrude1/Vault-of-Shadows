@@ -132,6 +132,10 @@ class SoundManager {
     playPurchase() {
         this.playSequence([500, 600, 700], 0.08, 'sine', 0.3);
     }
+
+    playSpell() {
+        this.playSequence([600, 800, 1000], 0.08, 'triangle', 0.25);
+    }
 }
 
 

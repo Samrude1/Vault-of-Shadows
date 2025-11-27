@@ -152,6 +152,11 @@
             this.addMessage('You hear the sound of a merchant nearby...');
         }
 
+        // Spawn boss if applicable (e.g. testing level 3 start)
+        if (this.isBossLevel(this.currentLevel)) {
+            this.spawnBoss(this.currentLevel);
+        }
+
         this.gameOver = false;
         this.addMessage('Welcome to the dungeon! Move with WASD or arrow keys.');
         this.updateUI();
@@ -350,6 +355,23 @@
             this.addMessage(attackMsg);
             this.sound.playHit();
 
+            // Handle boss abilities triggered by damage
+            if (monsterAtPos.isBoss) {
+                // Lich Teleport
+                if (monsterAtPos.shouldTeleport) {
+                    const newPos = this.dungeon.getRandomFloorPosition();
+                    monsterAtPos.x = newPos.x;
+                    monsterAtPos.y = newPos.y;
+                    monsterAtPos.shouldTeleport = false;
+                    this.addMessage(`The ${monsterAtPos.name} teleports away! 🌌`);
+                }
+
+                // Kobold King Summon (triggered by damage threshold)
+                if (monsterAtPos.shouldSummon) {
+                    this.handleBossAbilities(monsterAtPos);
+                }
+            }
+
             if (result.killed) {
                 // Award XP for kill
                 const xpReward = this.getXPForMonster(monsterAtPos.type);
@@ -458,7 +480,9 @@
         }
 
         // Monster turn
-        this.monsterTurn();
+        if (!this.player.isHasted() || this.turnCounter % 2 === 0) {
+            this.monsterTurn();
+        }
 
         // Process status effects
         const statusMessages = this.player.processStatusEffects();
@@ -473,6 +497,8 @@
                 this.addMessage('The burning subsides.');
             } else if (msg.type === 'stun_end') {
                 this.addMessage('You recover from being stunned.');
+            } else if (msg.type === 'haste_end') {
+                this.addMessage('You feel your speed return to normal.');
             }
         });
 
@@ -518,6 +544,11 @@
         // Each monster acts
         this.monsters.forEach(monster => {
             if (monster.isAlive()) {
+                // Handle boss abilities (summoning, enrage, etc.)
+                if (monster.isBoss) {
+                    this.handleBossAbilities(monster);
+                }
+
                 // Zombie regeneration
                 if (monster.type === 'zombie') {
                     monster.regenerate();
@@ -680,7 +711,7 @@
         for (let i = 0; i < numScrolls; i++) {
             const pos = this.dungeon.getRandomFloorPosition();
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
-                const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment'];
+                const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment', 'scroll_fireball', 'scroll_freeze', 'scroll_haste', 'scroll_identify', 'scroll_mapping', 'scroll_summon'];
                 const scrollType = scrollTypes[Math.floor(Math.random() * scrollTypes.length)];
                 this.items.push(new Item(pos.x, pos.y, scrollType));
             }
@@ -689,8 +720,96 @@
         // Place shop
         this.shopPosition = this.dungeon.placeShop();
 
+        // Spawn boss if applicable
+        if (this.isBossLevel(this.currentLevel)) {
+            this.spawnBoss(this.currentLevel);
+        }
+
         this.updateUI();
     }
+
+    isBossLevel(level) {
+        return [3, 6, 9, 10, 12].includes(level);
+    }
+
+    spawnBoss(level) {
+        const bossTypes = {
+            3: 'kobold_king',
+            6: 'orc_warlord',
+            9: 'lich',
+            10: 'amulet_guardian',
+            12: 'ancient_dragon'
+        };
+
+        const bossType = bossTypes[level];
+        if (!bossType) return;
+
+        // Try to place boss far from player
+        let bossPos = this.dungeon.getRandomFloorPosition();
+        let attempts = 0;
+        while (attempts < 50) {
+            const dist = Math.abs(bossPos.x - this.player.x) + Math.abs(bossPos.y - this.player.y);
+            if (dist > 10) break;
+            bossPos = this.dungeon.getRandomFloorPosition();
+            attempts++;
+        }
+
+        const boss = new Monster(bossPos.x, bossPos.y, bossType);
+        this.monsters.push(boss);
+        this.addMessage(`⚠️ You feel a powerful presence... A ${boss.name} awaits!`);
+    }
+
+    handleBossAbilities(monster) {
+        // Orc Warlord Enrage
+        if (monster.justEnraged) {
+            this.addMessage(`The ${monster.name} ROARS in anger! Attack increased! 💢`);
+            monster.justEnraged = false;
+            this.sound.playEnemyHit(); // Use a sound effect
+        }
+
+        // Lich Summoning
+        if (monster.shouldSummon) {
+            this.spawnMinions(monster, monster.summonType || 'skeleton', monster.summonCount || 2);
+            monster.shouldSummon = false;
+            this.addMessage(`The ${monster.name} summons minions! 💀`);
+        }
+
+        // Kobold King Summoning (handled in takeDamage usually, but checked here too)
+        if (monster.shouldSummon && monster.type === 'kobold_king') {
+            this.spawnMinions(monster, 'kobold', 2);
+            monster.shouldSummon = false;
+            this.addMessage(`The ${monster.name} calls for help! 📢`);
+        }
+
+        // Amulet Guardian Shield
+        if (monster.type === 'amulet_guardian' && monster.shieldActive) {
+            this.addMessage(`The ${monster.name} is protected by a shimmering shield! 🛡️`);
+        }
+    }
+
+    spawnMinions(boss, type, count) {
+        let spawned = 0;
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                if (spawned >= count) return;
+                if (dx === 0 && dy === 0) continue;
+
+                const x = boss.x + dx;
+                const y = boss.y + dy;
+
+                if (this.dungeon.isWalkable(x, y)) {
+                    const occupied = this.monsters.some(m => m.x === x && m.y === y && m.isAlive()) ||
+                        (this.player.x === x && this.player.y === y);
+
+                    if (!occupied) {
+                        this.monsters.push(new Monster(x, y, type));
+                        spawned++;
+                    }
+                }
+            }
+        }
+    }
+
     goToPreviousLevel() {
         if (this.currentLevel <= 1) {
             this.addMessage('You are already at the surface!');
@@ -798,7 +917,6 @@
         this.updateUI();
     }
 
-
     endGame(victory) {
         this.gameOver = true;
         if (victory) {
@@ -904,69 +1022,118 @@
     }
 
     handleScrollEffect(scrollType, scrollName) {
+        this.addMessage(`You read the ${scrollName}...`);
+        this.sound.playSpell();
+
         switch (scrollType) {
             case 'scroll_teleport':
-                // Teleport player to random location
                 const newPos = this.dungeon.getRandomFloorPosition();
                 this.player.x = newPos.x;
                 this.player.y = newPos.y;
-                this.addMessage(`You read the ${scrollName}. You are teleported!`);
-                this.sound.playItemPickup();
+                this.addMessage('You are teleported to a new location! 🌌');
+                this.updateVisibility();
                 break;
-
             case 'scroll_magic_missile':
-                // Damage all monsters within 3 tiles
-                let hitCount = 0;
-                let totalXP = 0;
-                this.monsters.forEach(monster => {
-                    if (monster.isAlive()) {
-                        const distX = Math.abs(monster.x - this.player.x);
-                        const distY = Math.abs(monster.y - this.player.y);
-                        const distance = Math.max(distX, distY);
-
-                        if (distance <= 3) {
-                            const killed = monster.takeDamage(10);
-                            hitCount++;
-                            if (killed) {
-                                // Award XP for kill
-                                const xpReward = this.getXPForMonster(monster.type);
-                                this.player.gainXP(xpReward);
-                                totalXP += xpReward;
-
-                                this.addMessage(`The magic missile kills the ${monster.name}!`);
-                                // Generate drops
-                                const drops = monster.generateDrops();
-                                drops.forEach(drop => {
-                                    this.items.push(new Item(monster.x, monster.y, drop.type, drop.value));
-                                });
-                            }
+                // Deal damage to nearest monster
+                let nearest = null;
+                let minDist = Infinity;
+                this.monsters.forEach(m => {
+                    if (m.isAlive()) {
+                        const d = Math.abs(m.x - this.player.x) + Math.abs(m.y - this.player.y);
+                        if (d < minDist) {
+                            minDist = d;
+                            nearest = m;
                         }
                     }
                 });
-                this.addMessage(`You read the ${scrollName}. Magic missiles strike ${hitCount} ${hitCount === 1 ? 'enemy' : 'enemies'}! (+${totalXP} XP)`);
-                this.sound.playHit();
 
-                // Check if player leveled up
-                if (this.player.level > this.currentPlayerLevel) {
-                    this.currentPlayerLevel = this.player.level;
-                    this.addMessage(`⭐ LEVEL UP! You are now level ${this.player.level}!`);
-                    this.sound.playItemPickup();
+                if (nearest && minDist < 8) {
+                    const damage = 20;
+                    nearest.takeDamage(damage);
+                    this.addMessage(`A magic missile strikes the ${nearest.name} for ${damage} damage! ⚡`);
+                    if (!nearest.isAlive()) {
+                        this.addMessage(`The ${nearest.name} is killed!`);
+                        this.player.gainXP(this.getXPForMonster(nearest.type));
+                    }
+                } else {
+                    this.addMessage('But nothing happens.');
                 }
                 break;
-
             case 'scroll_healing':
-                // Restore 15 health
-                this.player.heal(15);
-                this.addMessage(`You read the ${scrollName}. You feel much better!`);
-                this.sound.playHeal();
+                this.player.heal(20);
+                this.addMessage('You feel much better! 💖');
                 break;
-
             case 'scroll_enchantment':
-                // Increase attack and defense by 1
-                this.player.attack += 1;
-                this.player.defense += 1;
-                this.addMessage(`You read the ${scrollName}. You feel empowered! Attack +1, Defense +1!`);
-                this.sound.playEquip();
+                if (Math.random() < 0.5) {
+                    this.player.attack += 1;
+                    this.addMessage('Your weapon glows with magical energy! (+1 Attack) ⚔️');
+                } else {
+                    this.player.defense += 1;
+                    this.addMessage('Your armor hardens! (+1 Defense) 🛡️');
+                }
+                break;
+            case 'scroll_fireball':
+                this.addMessage('A massive fireball explodes around you! 🔥');
+                let hitCount = 0;
+                this.monsters.forEach(m => {
+                    if (m.isAlive()) {
+                        const dist = Math.max(Math.abs(m.x - this.player.x), Math.abs(m.y - this.player.y));
+                        if (dist <= 3) { // 3 tile radius
+                            const damage = 15;
+                            m.takeDamage(damage);
+                            this.addMessage(`The ${m.name} is burned for ${damage} damage!`);
+                            if (!m.isAlive()) {
+                                this.player.gainXP(this.getXPForMonster(m.type));
+                            }
+                            hitCount++;
+                        }
+                    }
+                });
+                if (hitCount === 0) this.addMessage('The fireball hits nothing.');
+                break;
+            case 'scroll_freeze':
+                this.addMessage('A freezing blast expands from you! ❄️');
+                this.monsters.forEach(m => {
+                    if (m.isAlive()) {
+                        const dist = Math.max(Math.abs(m.x - this.player.x), Math.abs(m.y - this.player.y));
+                        if (dist <= 4) {
+                            m.stunned = 2; // We'll need to check this in monster.act()
+                            this.addMessage(`The ${m.name} is frozen solid!`);
+                        }
+                    }
+                });
+                break;
+            case 'scroll_haste':
+                this.player.applyStatusEffect('haste', 10);
+                this.addMessage('You feel incredibly fast! (Double speed) ⚡');
+                break;
+            case 'scroll_identify':
+                this.addMessage('You gain knowledge of the items on this floor! 📜');
+                // For now, just a message as we don't have unidentified items system fully working
+                break;
+            case 'scroll_mapping':
+                this.addMessage('The layout of this level is revealed! 🗺️');
+                for (let y = 0; y < this.dungeonHeight; y++) {
+                    for (let x = 0; x < this.dungeonWidth; x++) {
+                        this.explored[y][x] = true;
+                    }
+                }
+                this.updateVisibility();
+                break;
+            case 'scroll_summon':
+                this.addMessage('You summon a friendly Spirit! 👻');
+                // Deal damage to a random enemy as a "summoned ally attack"
+                let target = null;
+                this.monsters.forEach(m => {
+                    if (m.isAlive() && !target) target = m;
+                });
+                if (target) {
+                    target.takeDamage(10);
+                    this.addMessage(`The Spirit attacks the ${target.name} for 10 damage!`);
+                    if (!target.isAlive()) {
+                        this.player.gainXP(this.getXPForMonster(target.type));
+                    }
+                }
                 break;
         }
     }
@@ -1179,4 +1346,3 @@
 window.addEventListener('DOMContentLoaded', () => {
     new Game();
 });
-
