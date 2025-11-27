@@ -22,7 +22,7 @@
 
         this.messages = [];
         this.maxMessages = 5;
-        this.winLevel = 5; // Level where Amulet of Yendor appears
+        this.winLevel = 10; // Level where Amulet of Yendor appears (changed from 5 to 10)
 
         // Hunger system
         this.turnCounter = 0;
@@ -32,6 +32,9 @@
         this.explored = [];
         this.visible = [];
         this.visibilityRadius = 3; // How far the player can see
+
+        // Player level tracking for level-up notifications
+        this.currentPlayerLevel = 1;
 
         // Enable audio on first user interaction
         const enableAudio = () => {
@@ -69,7 +72,7 @@
 
         // Create monsters
         this.monsters = [];
-        const numMonsters = 5 + Math.floor(this.currentLevel * 2);
+        const numMonsters = 4 + Math.floor(this.currentLevel * 1.5); // Reduced from 5 + (level * 2)
         const usedPositions = new Set();
         let attempts = 0;
         const maxAttempts = numMonsters * 20; // Prevent infinite loops
@@ -310,14 +313,25 @@
             this.sound.playHit();
 
             if (killed) {
+                // Award XP for kill
+                const xpReward = this.getXPForMonster(monsterAtPos.type);
+                const leveledUp = this.player.gainXP(xpReward);
+
                 // Generate drops from killed monster
                 const drops = monsterAtPos.generateDrops();
                 drops.forEach(drop => {
                     this.items.push(new Item(monsterAtPos.x, monsterAtPos.y, drop.type, drop.value));
                 });
 
-                this.addMessage(`You killed the ${monsterAtPos.name}!`);
+                this.addMessage(`You killed the ${monsterAtPos.name}! (+${xpReward} XP)`);
                 this.sound.playKill();
+
+                // Check if player leveled up
+                if (this.player.level > this.currentPlayerLevel) {
+                    this.currentPlayerLevel = this.player.level;
+                    this.addMessage(`⭐ LEVEL UP! You are now level ${this.player.level}!`);
+                    this.sound.playItemPickup(); // Use pickup sound for level up
+                }
             } else {
                 // Monster counterattacks
                 const playerKilled = monsterAtPos.attackTarget(this.player);
@@ -469,6 +483,15 @@
         this.addMessage(`You descend to level ${this.currentLevel}...`);
         this.sound.playLevelDown();
 
+        // Milestone messages
+        if (this.currentLevel === 5) {
+            this.addMessage("You've reached the halfway point. The air grows colder...");
+        } else if (this.currentLevel === 10) {
+            this.addMessage("You sense immense power ahead. The Amulet is near!");
+        } else if (this.currentLevel === 15) {
+            this.addMessage("You've ventured deeper than most dare. Legendary treasures await...");
+        }
+
         // Generate new dungeon
         const generator = new DungeonGenerator(this.dungeonWidth, this.dungeonHeight);
         this.dungeon = generator;
@@ -490,7 +513,7 @@
 
         // Create new monsters (more on deeper levels)
         this.monsters = [];
-        const numMonsters = 5 + Math.floor(this.currentLevel * 2);
+        const numMonsters = 4 + Math.floor(this.currentLevel * 1.5); // Reduced from 5 + (level * 2)
         const usedPositions = new Set();
         let attempts = 0;
         const maxAttempts = numMonsters * 20;
@@ -606,7 +629,7 @@
 
         // Create new monsters
         this.monsters = [];
-        const numMonsters = 5 + Math.floor(this.currentLevel * 2);
+        const numMonsters = 4 + Math.floor(this.currentLevel * 1.5); // Reduced from 5 + (level * 2)
         const usedPositions = new Set();
         let attempts = 0;
         const maxAttempts = numMonsters * 20;
@@ -721,12 +744,17 @@
 
     updateUI() {
         document.getElementById('health').textContent = `${this.player.health}/${this.player.maxHealth}`;
-        document.getElementById('level').textContent = this.currentLevel;
+        document.getElementById('player-level').textContent = this.player.level;
         document.getElementById('depth').textContent = this.currentLevel;
         document.getElementById('gold').textContent = this.player.gold;
         document.getElementById('attack').textContent = this.player.attack;
         document.getElementById('defense').textContent = this.player.defense;
         document.getElementById('hunger').textContent = `${this.player.hunger}/${this.player.maxHunger}`;
+
+        // Update XP bar
+        const xpPercent = (this.player.xp / this.player.xpToNextLevel) * 100;
+        document.getElementById('xp-bar').style.width = `${xpPercent}%`;
+        document.getElementById('xp-text').textContent = `${this.player.xp}/${this.player.xpToNextLevel}`;
 
         // Update health color
         const healthEl = document.getElementById('health');
@@ -769,6 +797,7 @@
             case 'scroll_magic_missile':
                 // Damage all monsters within 3 tiles
                 let hitCount = 0;
+                let totalXP = 0;
                 this.monsters.forEach(monster => {
                     if (monster.isAlive()) {
                         const distX = Math.abs(monster.x - this.player.x);
@@ -779,6 +808,11 @@
                             const killed = monster.takeDamage(10);
                             hitCount++;
                             if (killed) {
+                                // Award XP for kill
+                                const xpReward = this.getXPForMonster(monster.type);
+                                this.player.gainXP(xpReward);
+                                totalXP += xpReward;
+
                                 this.addMessage(`The magic missile kills the ${monster.name}!`);
                                 // Generate drops
                                 const drops = monster.generateDrops();
@@ -789,8 +823,15 @@
                         }
                     }
                 });
-                this.addMessage(`You read the ${scrollName}. Magic missiles strike ${hitCount} ${hitCount === 1 ? 'enemy' : 'enemies'}!`);
+                this.addMessage(`You read the ${scrollName}. Magic missiles strike ${hitCount} ${hitCount === 1 ? 'enemy' : 'enemies'}! (+${totalXP} XP)`);
                 this.sound.playHit();
+
+                // Check if player leveled up
+                if (this.player.level > this.currentPlayerLevel) {
+                    this.currentPlayerLevel = this.player.level;
+                    this.addMessage(`⭐ LEVEL UP! You are now level ${this.player.level}!`);
+                    this.sound.playItemPickup();
+                }
                 break;
 
             case 'scroll_healing':
@@ -902,57 +943,80 @@
 
     // Helper function to select monster type based on dungeon depth
     selectMonsterType(level) {
+        // Rebalanced distributions for smoother difficulty curve
         const distributions = {
+            // Levels 1-3: Easy (Kobolds, Bats, Goblins)
             1: [
-                { type: 'kobold', weight: 70 },
-                { type: 'bat', weight: 20 },
-                { type: 'goblin', weight: 10 }
+                { type: 'kobold', weight: 60 },
+                { type: 'bat', weight: 25 },
+                { type: 'goblin', weight: 15 }
             ],
             2: [
-                { type: 'kobold', weight: 70 },
-                { type: 'bat', weight: 20 },
-                { type: 'goblin', weight: 10 }
+                { type: 'kobold', weight: 60 },
+                { type: 'bat', weight: 25 },
+                { type: 'goblin', weight: 15 }
             ],
             3: [
-                { type: 'kobold', weight: 40 },
-                { type: 'bat', weight: 20 },
-                { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 15 },
-                { type: 'orc', weight: 5 }
+                { type: 'kobold', weight: 60 },
+                { type: 'bat', weight: 25 },
+                { type: 'goblin', weight: 15 }
             ],
+            // Levels 4-6: Medium (add Skeletons, Orcs)
             4: [
-                { type: 'kobold', weight: 40 },
-                { type: 'bat', weight: 20 },
+                { type: 'kobold', weight: 30 },
+                { type: 'bat', weight: 15 },
                 { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 15 },
-                { type: 'orc', weight: 5 }
+                { type: 'skeleton', weight: 20 },
+                { type: 'orc', weight: 15 }
             ],
             5: [
-                { type: 'orc', weight: 30 },
-                { type: 'skeleton', weight: 25 },
+                { type: 'kobold', weight: 30 },
+                { type: 'bat', weight: 15 },
                 { type: 'goblin', weight: 20 },
-                { type: 'troll', weight: 15 },
-                { type: 'zombie', weight: 10 }
+                { type: 'skeleton', weight: 20 },
+                { type: 'orc', weight: 15 }
             ],
             6: [
-                { type: 'orc', weight: 30 },
-                { type: 'skeleton', weight: 25 },
+                { type: 'kobold', weight: 30 },
+                { type: 'bat', weight: 15 },
                 { type: 'goblin', weight: 20 },
-                { type: 'troll', weight: 15 },
-                { type: 'zombie', weight: 10 }
+                { type: 'skeleton', weight: 20 },
+                { type: 'orc', weight: 15 }
+            ],
+            // Levels 7-9: Hard (add Trolls, Zombies)
+            7: [
+                { type: 'orc', weight: 25 },
+                { type: 'skeleton', weight: 20 },
+                { type: 'goblin', weight: 15 },
+                { type: 'troll', weight: 20 },
+                { type: 'zombie', weight: 20 }
+            ],
+            8: [
+                { type: 'orc', weight: 25 },
+                { type: 'skeleton', weight: 20 },
+                { type: 'goblin', weight: 15 },
+                { type: 'troll', weight: 20 },
+                { type: 'zombie', weight: 20 }
+            ],
+            9: [
+                { type: 'orc', weight: 25 },
+                { type: 'skeleton', weight: 20 },
+                { type: 'goblin', weight: 15 },
+                { type: 'troll', weight: 20 },
+                { type: 'zombie', weight: 20 }
             ]
         };
 
-        // For levels 7+, use a different distribution
+        // For levels 10+, use very hard distribution (Dragons appear)
         const deepDistribution = [
-            { type: 'troll', weight: 30 },
+            { type: 'troll', weight: 25 },
             { type: 'zombie', weight: 25 },
-            { type: 'skeleton', weight: 20 },
+            { type: 'skeleton', weight: 15 },
             { type: 'orc', weight: 15 },
-            { type: 'dragon', weight: 10 }
+            { type: 'dragon', weight: 20 }
         ];
 
-        const distribution = level >= 7 ? deepDistribution : (distributions[level] || distributions[1]);
+        const distribution = level >= 10 ? deepDistribution : (distributions[level] || distributions[1]);
 
         // Calculate total weight
         const totalWeight = distribution.reduce((sum, item) => sum + item.weight, 0);
@@ -967,6 +1031,27 @@
         }
 
         return 'kobold'; // Fallback
+    }
+
+    // Helper function to get XP reward for killing a monster
+    getXPForMonster(monsterType) {
+        const xpTable = {
+            kobold: 10,
+            bat: 8,
+            goblin: 12,
+            skeleton: 15,
+            orc: 20,
+            troll: 35,
+            zombie: 30,
+            dragon: 100,
+            // Bosses (to be added later)
+            kobold_king: 150,
+            orc_warlord: 250,
+            lich: 350,
+            ancient_dragon: 500,
+            amulet_guardian: 400
+        };
+        return xpTable[monsterType] || 10; // Default to 10 XP
     }
 }
 

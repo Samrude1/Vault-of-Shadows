@@ -43,15 +43,16 @@ The game has undergone a complete visual transformation. While the core mechanic
 - **Procedural Dungeon Generation**: Every run is unique with random rooms, corridors, and monster placement.
 - **Turn-Based Combat**: Tactical grid-based combat. Move into enemies to attack.
 - **Deep Progression**:
+  - **XP & Leveling**: Gain experience from kills and level up to increase stats (max level 15).
   - **Level Up**: Descend deeper into the dungeon (infinite levels).
-  - **Difficulty Scaling**: Monsters get tougher and new types appear as you go deeper (Dragons at Level 7+!).
+  - **Difficulty Scaling**: Monsters get tougher and new types appear as you go deeper (Dragons at Level 10+!).
   - **Economy**: Collect gold to spend at shops (one per level).
 - **Survival Mechanics**:
   - **Hunger**: Manage your food supply to avoid starvation.
   - **Permadeath**: Death is final. No saves.
 - **Items & Equipment**:
   - Potions, Scrolls (Teleport, Magic Missile, etc.), Weapons, and Armor.
-  - **Amulet of Yendor**: The ultimate goal, located on Level 5.
+  - **Amulet of Yendor**: The ultimate goal, located on Level 10.
 
 ## How to Play
 
