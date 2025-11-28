@@ -323,12 +323,16 @@ class Game {
         const itemType = this.player.inventory;
         const itemData = Item.getItemData(itemType);
 
-        // Use the item (trigger scroll effect)
+        // Use the item (trigger scroll/potion effect)
         this.handleScrollEffect(itemType, itemData.name);
 
         // Clear inventory
         this.player.inventory = null;
-        this.addMessage(`You used ${itemData.name}!`);
+        if (itemType.startsWith('potion_')) {
+            this.addMessage(`You drank the ${itemData.name}!`);
+        } else {
+            this.addMessage(`You used ${itemData.name}!`);
+        }
 
         // Monster turn happens after using item
         this.combat.monsterTurn();
@@ -401,10 +405,14 @@ class Game {
             let attackMsg = `You attack the ${monsterAtPos.name} for ${result.damage} damage`;
             if (result.isCrit) {
                 attackMsg += ' 💥 CRITICAL HIT!';
+                this.renderer.triggerShake(5);
+                this.renderer.triggerFlash('#ffffff', 3);
+                this.sound.playCriticalHit();
+            } else {
+                this.sound.playHit();
             }
             attackMsg += '!';
             this.addMessage(attackMsg);
-            this.sound.playHit();
 
             // Handle boss abilities triggered by damage
             if (monsterAtPos.isBoss) {
@@ -443,40 +451,8 @@ class Game {
                     this.addMessage(`🌟 LEVEL UP! You are now level ${this.player.level}!`);
                     this.sound.playItemPickup(); // Use pickup sound for level up
                 }
-            } else {
-                // Monster counterattacks
-                const counterResult = monsterAtPos.attackTarget(this.player);
-
-                // Display counterattack message with crit/dodge indicators
-                if (counterResult.dodged) {
-                    this.addMessage(`The ${monsterAtPos.name} attacks but you DODGE! ⚡`);
-                } else {
-                    let counterMsg = `The ${monsterAtPos.name} attacks you for ${counterResult.damage} damage`;
-                    if (counterResult.isCrit) {
-                        counterMsg += ' 💥 CRITICAL!';
-                    }
-                    counterMsg += '!';
-                    this.addMessage(counterMsg);
-                    this.sound.playEnemyHit();
-
-                    // Apply status effect if any
-                    if (counterResult.statusEffect) {
-                        this.player.applyStatusEffect(
-                            counterResult.statusEffect.type,
-                            counterResult.statusEffect.duration
-                        );
-                        const effectName = counterResult.statusEffect.type.charAt(0).toUpperCase() +
-                            counterResult.statusEffect.type.slice(1);
-                        this.addMessage(`You are ${effectName}ed! 😵`);
-                    }
-                }
-
-                if (counterResult.killed) {
-                    this.endGame(false);
-                    this.waitingForInput = false;
-                    return;
-                }
             }
+            // Note: Monster will attack during its turn (monsterTurn() called later)
         } else if (itemAtPos) {
             // Check if it's a scroll and inventory is full
             if (itemAtPos.type.startsWith('scroll_') && this.player.inventory !== null) {
@@ -580,6 +556,10 @@ class Game {
                 this.addMessage('You recover from being stunned.');
             } else if (msg.type === 'haste_end') {
                 this.addMessage('You feel your speed return to normal.');
+            } else if (msg.type === 'strength_end') {
+                this.addMessage('The strength potion wears off.');
+            } else if (msg.type === 'shield_end') {
+                this.addMessage('The shield potion wears off.');
             }
         });
 
@@ -962,23 +942,31 @@ class Game {
                 break;
             case 'scroll_freeze':
                 this.addMessage('A freezing blast expands from you! ❄️');
+                let frozenCount = 0;
                 this.monsters.forEach(m => {
                     if (m.isAlive()) {
                         const dist = Math.max(Math.abs(m.x - this.player.x), Math.abs(m.y - this.player.y));
                         if (dist <= 4) {
-                            m.stunned = 2; // We'll need to check this in monster.act()
-                            this.addMessage(`The ${m.name} is frozen solid!`);
+                            m.stunned = 5; // Frozen for 5 turns
+                            frozenCount++;
                         }
                     }
                 });
+                if (frozenCount > 0) {
+                    this.addMessage(`${frozenCount} ${frozenCount === 1 ? 'enemy' : 'enemies'} frozen for 5 turns!`);
+                } else {
+                    this.addMessage('No enemies nearby to freeze.');
+                }
                 break;
             case 'scroll_haste':
-                this.player.applyStatusEffect('haste', 10);
-                this.addMessage('You feel incredibly fast! (Double speed) ⏩');
+                this.player.applyStatusEffect('haste', 15);
+                this.addMessage('You feel incredibly fast! (Double speed for 15 turns) ⏩');
                 break;
             case 'scroll_identify':
-                this.addMessage('You gain knowledge of the items on this floor! 📜');
-                // For now, just a message as we don't have unidentified items system fully working
+                this.addMessage('You sense the location of all items on this floor! 📜');
+                this.items.forEach(item => {
+                    item.revealed = true;
+                });
                 break;
             case 'scroll_mapping':
                 this.addMessage('The layout of this level is revealed! 🗺️');
@@ -991,29 +979,34 @@ class Game {
                 break;
             case 'scroll_summon':
                 this.addMessage('You summon a friendly Spirit! 👻');
-                // Find the nearest enemy
-                let nearestTarget = null;
-                let nearestDist = Infinity;
+                // Spirit attacks ALL nearby enemies (within 5 tiles)
+                let spiritHits = 0;
                 this.monsters.forEach(m => {
                     if (m.isAlive()) {
                         const dist = Math.abs(m.x - this.player.x) + Math.abs(m.y - this.player.y);
-                        if (dist < nearestDist) {
-                            nearestDist = dist;
-                            nearestTarget = m;
+                        if (dist <= 5) {
+                            const damage = 20; // Spirit does 20 damage to each
+                            m.takeDamage(damage);
+                            this.addMessage(`The Spirit attacks the ${m.name} for ${damage} damage!`);
+                            if (!m.isAlive()) {
+                                this.addMessage(`The ${m.name} is destroyed!`);
+                                this.player.gainXP(this.combat.getXPForMonster(m));
+                            }
+                            spiritHits++;
                         }
                     }
                 });
-                if (nearestTarget) {
-                    const damage = 15; // Spirit does 15 damage
-                    nearestTarget.takeDamage(damage);
-                    this.addMessage(`The Spirit attacks the ${nearestTarget.name} for ${damage} damage!`);
-                    if (!nearestTarget.isAlive()) {
-                        this.addMessage(`The ${nearestTarget.name} is destroyed!`);
-                        this.player.gainXP(this.combat.getXPForMonster(nearestTarget));
-                    }
-                } else {
+                if (spiritHits === 0) {
                     this.addMessage('The Spirit finds no enemies to attack.');
                 }
+                break;
+            case 'potion_shield':
+                this.player.applyStatusEffect('shield', 10);
+                this.addMessage('You feel your skin harden! (+50% Defense for 10 turns) 🛡️');
+                break;
+            case 'potion_strength':
+                this.player.applyStatusEffect('strength', 10);
+                this.addMessage('You feel a surge of power! (+50% Attack for 10 turns) 💪');
                 break;
         }
     }

@@ -36,10 +36,14 @@ class GameCombat {
                         let attackMsg = `The ${monster.name} attacks you for ${result.damage} damage`;
                         if (result.isCrit) {
                             attackMsg += ' 💥 CRITICAL!';
+                            this.game.renderer.triggerShake(10);
+                            this.game.renderer.triggerFlash('#ef4444', 5);
+                            this.game.sound.playCriticalHit();
+                        } else {
+                            this.game.sound.playEnemyHit();
                         }
                         attackMsg += '!';
                         this.game.addMessage(attackMsg);
-                        this.game.sound.playEnemyHit();
 
                         // Apply status effect if any
                         if (result.statusEffect) {

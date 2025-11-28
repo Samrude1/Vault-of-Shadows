@@ -4,6 +4,7 @@ class Item {
         this.y = y;
         this.type = type;
         this.pickedUp = false;
+        this.revealed = false;
 
         const itemData = Item.getItemData(type);
         this.name = itemData.name;
@@ -24,6 +25,18 @@ class Item {
                 symbol: '!',
                 color: '#ef4444', // Bright red
                 description: 'Restores health'
+            },
+            potion_shield: {
+                name: 'Shield Potion',
+                symbol: '!',
+                color: '#3b82f6', // Blue
+                description: 'Increases Defense by 50% for 10 turns'
+            },
+            potion_strength: {
+                name: 'Strength Potion',
+                symbol: '!',
+                color: '#f97316', // Orange
+                description: 'Increases Attack by 50% for 10 turns'
             },
             // Weapons
             dagger: {
@@ -207,15 +220,31 @@ class Item {
             case 'axe':
             case 'magic_staff':
                 const weaponData = Item.getItemData(this.type);
-                player.equipWeapon(weaponData);
-                return `You equip the ${this.name}. Attack +${weaponData.attackBonus}${weaponData.defenseBonus > 0 ? ', Defense +' + weaponData.defenseBonus : ''}!`;
+                // Apply level scaling: +0.15 attack per dungeon level
+                const weaponLevelBonus = Math.floor(this.dungeonLevel * 0.15);
+                const totalAttackBonus = weaponData.attackBonus + weaponLevelBonus;
+                const scaledWeaponData = {
+                    ...weaponData,
+                    attackBonus: totalAttackBonus
+                };
+                player.equipWeapon(scaledWeaponData);
+                const weaponMsg = `You equip the ${this.name}. Attack +${totalAttackBonus}${weaponData.defenseBonus > 0 ? ', Defense +' + weaponData.defenseBonus : ''}!`;
+                return weaponLevelBonus > 0 ? weaponMsg + ` (Level ${this.dungeonLevel} bonus: +${weaponLevelBonus})` : weaponMsg;
             case 'leather_armor':
             case 'chain_mail':
             case 'plate_armor':
             case 'magic_robes':
                 const armorData = Item.getItemData(this.type);
-                player.equipArmor(armorData);
-                return `You equip the ${this.name}. Defense +${armorData.defenseBonus}${armorData.attackBonus > 0 ? ', Attack +' + armorData.attackBonus : ''}!`;
+                // Apply level scaling: +0.1 defense per dungeon level
+                const armorLevelBonus = Math.floor(this.dungeonLevel * 0.1);
+                const totalDefenseBonus = armorData.defenseBonus + armorLevelBonus;
+                const scaledArmorData = {
+                    ...armorData,
+                    defenseBonus: totalDefenseBonus
+                };
+                player.equipArmor(scaledArmorData);
+                const armorMsg = `You equip the ${this.name}. Defense +${totalDefenseBonus}${armorData.attackBonus > 0 ? ', Attack +' + armorData.attackBonus : ''}!`;
+                return armorLevelBonus > 0 ? armorMsg + ` (Level ${this.dungeonLevel} bonus: +${armorLevelBonus})` : armorMsg;
             case 'amulet':
                 return `You have retrieved the ${this.name}! You are victorious!`;
             case 'gold':
@@ -243,7 +272,9 @@ class Item {
             case 'scroll_identify':
             case 'scroll_mapping':
             case 'scroll_summon':
-                // Scrolls need game context, return scroll type for game to handle
+            case 'potion_shield':
+            case 'potion_strength':
+                // Scrolls and special potions need game context, return type for game to handle
                 return { scrollType: this.type, scrollName: this.name };
             default:
                 return `You use the ${this.name}.`;

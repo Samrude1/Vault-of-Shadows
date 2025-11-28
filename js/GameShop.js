@@ -93,9 +93,7 @@ class GameShop {
     }
 
     getWeaponForLevel(level) {
-        if (level <= 2) {
-            return { type: 'dagger', name: 'Dagger', attackBonus: 1, defenseBonus: 0 };
-        } else if (level <= 5) {
+        if (level <= 4) {
             return { type: 'sword', name: 'Sword', attackBonus: 2, defenseBonus: 0 };
         } else if (level <= 8) {
             return { type: 'axe', name: 'Axe', attackBonus: 3, defenseBonus: 0 };
@@ -105,9 +103,7 @@ class GameShop {
     }
 
     getArmorForLevel(level) {
-        if (level <= 2) {
-            return { type: 'leather_armor', name: 'Leather Armor', attackBonus: 0, defenseBonus: 1 };
-        } else if (level <= 5) {
+        if (level <= 4) {
             return { type: 'chain_mail', name: 'Chain Mail', attackBonus: 0, defenseBonus: 2 };
         } else if (level <= 8) {
             return { type: 'plate_armor', name: 'Plate Armor', attackBonus: 0, defenseBonus: 3 };
@@ -122,8 +118,8 @@ class GameShop {
             return;
         }
 
-        // Check if trying to buy a scroll but inventory is full
-        if (itemType.startsWith('scroll_') && this.game.player.inventory !== null) {
+        // Check if trying to buy a scroll or carryable potion but inventory is full
+        if ((itemType.startsWith('scroll_') || itemType.startsWith('potion_')) && this.game.player.inventory !== null) {
             this.game.addMessage('Inventory full! Use your current item first (Press U).');
             return;
         }
@@ -131,8 +127,8 @@ class GameShop {
         this.game.player.gold -= price;
         this.game.sound.playPurchase();
 
-        // Handle scrolls - add to inventory
-        if (itemType.startsWith('scroll_')) {
+        // Handle scrolls and carryable potions - add to inventory
+        if (itemType.startsWith('scroll_') || itemType.startsWith('potion_')) {
             this.game.player.inventory = itemType;
             const itemData = Item.getItemData(itemType);
             this.game.addMessage(`Purchased ${itemData.name} for ${price} gold! Press U to use.`);

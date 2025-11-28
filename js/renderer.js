@@ -7,6 +7,11 @@ class Renderer {
         this.setupCanvas();
 
         this.tileCache = {};
+
+        // Visual effects state
+        this.shakeAmount = 0;
+        this.flashColor = null;
+        this.flashDuration = 0;
     }
 
     setupCanvas() {
@@ -24,6 +29,19 @@ class Renderer {
 
     render(game, dungeon, player, monsters, items) {
         this.clear();
+
+        // Apply screen shake
+        let offsetX = 0;
+        let offsetY = 0;
+        if (this.shakeAmount > 0) {
+            offsetX = (Math.random() - 0.5) * this.shakeAmount;
+            offsetY = (Math.random() - 0.5) * this.shakeAmount;
+            this.shakeAmount *= 0.9; // Decay
+            if (this.shakeAmount < 0.5) this.shakeAmount = 0;
+        }
+
+        this.ctx.save();
+        this.ctx.translate(offsetX, offsetY);
 
         const cameraX = Math.max(0, Math.min(
             dungeon.width - this.cols,
@@ -65,7 +83,7 @@ class Renderer {
 
         // Render items
         items.forEach(item => {
-            if (!item.pickedUp && game.isVisible(item.x, item.y)) {
+            if (!item.pickedUp && (game.isVisible(item.x, item.y) || item.revealed)) {
                 const screenX = (item.x - cameraX) * this.tileSize;
                 const screenY = (item.y - cameraY) * this.tileSize;
                 if (this.isOnScreen(screenX, screenY)) {
@@ -91,6 +109,26 @@ class Renderer {
         if (this.isOnScreen(playerScreenX, playerScreenY)) {
             this.drawToken(playerScreenX, playerScreenY, player.symbol, player.color, 'player');
         }
+
+        this.ctx.restore(); // Restore context (undo shake translation)
+
+        // Render flash overlay
+        if (this.flashDuration > 0 && this.flashColor) {
+            this.ctx.fillStyle = this.flashColor;
+            this.ctx.globalAlpha = Math.min(0.3, this.flashDuration / 10); // Fade out
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.globalAlpha = 1.0;
+            this.flashDuration--;
+        }
+    }
+
+    triggerShake(amount) {
+        this.shakeAmount = amount;
+    }
+
+    triggerFlash(color, duration) {
+        this.flashColor = color;
+        this.flashDuration = duration;
     }
 
     isOnScreen(x, y) {
@@ -140,43 +178,46 @@ class Renderer {
         const ctx = this.ctx;
         const s = this.tileSize;
 
-        // Progressive wall colors every 3 levels
-        // Colors are chosen to be always visible (never too dark)
         let baseColor, darkColor, lightColor;
+        const tier = Math.floor((level - 1) / 3);
 
-        const tier = Math.floor((level - 1) / 3); // 0 for levels 1-3, 1 for 4-6, etc.
+        if (tier === 0) {
+            // Levels 1-3: Classic gray stone
+            baseColor = '#404040';
+            darkColor = '#262626';
+            lightColor = '#525252';
+        } else {
+            // Levels 4+: Procedurally generated colors
+            // Use Golden Angle for tier-1 to start the color cycle from tier 1
+            const hue = ((tier - 1) * 137.508) % 360;
 
-        switch (tier % 6) { // Cycle through 6 color schemes
-            case 0: // Levels 1-3: Gray stone (default)
-                baseColor = '#404040';
-                darkColor = '#262626';
-                lightColor = '#525252';
-                break;
-            case 1: // Levels 4-6: Brown/Earth stone
-                baseColor = '#4a3f35';
-                darkColor = '#2d2419';
-                lightColor = '#5c4d3f';
-                break;
-            case 2: // Levels 7-9: Blue-gray stone
-                baseColor = '#3d4a52';
-                darkColor = '#252e33';
-                lightColor = '#4f5f6b';
-                break;
-            case 3: // Levels 10-12: Purple-gray stone
-                baseColor = '#4a3f52';
-                darkColor = '#2d2433';
-                lightColor = '#5c4f6b';
-                break;
-            case 4: // Levels 13-15: Green-gray stone
-                baseColor = '#3f4a3f';
-                darkColor = '#242d24';
-                lightColor = '#4f5f4f';
-                break;
-            case 5: // Levels 16-18: Red-gray stone
-                baseColor = '#4a3f3f';
-                darkColor = '#2d2424';
-                lightColor = '#5c4f4f';
-                break;
+            // Use a simple pseudo-random hash for Saturation and Lightness variation
+            const hash = (n) => {
+                const x = Math.sin(n) * 43758.5453123;
+                return x - Math.floor(x);
+            };
+
+            // Saturation: 25-45%
+            const sat = 25 + (hash(tier) * 20);
+
+            // Lightness: 20-35%
+            const light = 20 + (hash(tier + 100) * 15);
+
+            // Convert HSL to Hex for canvas
+            const hslToHex = (h, s, l) => {
+                l /= 100;
+                const a = s * Math.min(l, 1 - l) / 100;
+                const f = n => {
+                    const k = (n + h / 30) % 12;
+                    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                    return Math.round(255 * color).toString(16).padStart(2, '0');
+                };
+                return `#${f(0)}${f(8)}${f(4)}`;
+            };
+
+            baseColor = hslToHex(hue, sat, light);
+            darkColor = hslToHex(hue, sat, light * 0.6);
+            lightColor = hslToHex(hue, sat, light * 1.4);
         }
 
         // Main block

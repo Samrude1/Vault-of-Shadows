@@ -24,7 +24,9 @@ class Player {
             poison: { active: false, duration: 0 },
             burn: { active: false, duration: 0 },
             stun: { active: false, duration: 0 },
-            haste: { active: false, duration: 0 }
+            haste: { active: false, duration: 0 },
+            strength: { active: false, duration: 0 },
+            shield: { active: false, duration: 0 }
         };
 
         // Equipment slots
@@ -54,8 +56,14 @@ class Player {
     }
 
     takeDamage(amount) {
+        // Apply shield buff (increase defense effectively)
+        let effectiveDefense = this.defense;
+        if (this.statusEffects.shield.active) {
+            effectiveDefense += Math.max(1, Math.floor(this.defense * 0.5)); // +50%
+        }
+
         // Dodge chance: 5% per defense point, max 30%
-        const dodgeChance = Math.min(this.defense * 0.05, 0.30);
+        const dodgeChance = Math.min(effectiveDefense * 0.05, 0.30);
         const dodged = Math.random() < dodgeChance;
 
         if (dodged) {
@@ -85,9 +93,14 @@ class Player {
         const damageRoll = Utils.rollDice(1, 6);
 
         // 2. Laske perusvahinko: Nopan tulos + Attack-bonus - Kohteen Defense
+        let attackPower = this.attack;
+        if (this.statusEffects.strength.active) {
+            attackPower += Math.max(1, Math.floor(this.attack * 0.5)); // +50%
+        }
+
         const baseDamage = Math.max(
             1,
-            damageRoll + this.attack - target.defense
+            damageRoll + attackPower - target.defense
         );
 
         // Critical hit: 10% chance for 2x damage
@@ -140,19 +153,22 @@ class Player {
 
     // XP and Leveling methods
     getXPForNextLevel(level) {
-        // Exponential Curve: 50 * (1.15 ^ Level)
-        // Level 1: 57 XP
-        // Level 5: 100 XP
-        // Level 10: 202 XP
-        // Level 20: 818 XP
-        return Math.floor(50 * Math.pow(1.15, level));
+        // Exponential Curve: 50 * (1.12 ^ Level)
+        // Adjusted from 1.15 to 1.12 for more reasonable progression in endless mode
+        // Level 1: 56 XP
+        // Level 5: 88 XP
+        // Level 10: 155 XP
+        // Level 20: 481 XP
+        // Level 30: 1,497 XP
+        // Level 50: 14,542 XP
+        return Math.floor(50 * Math.pow(1.12, level));
     }
 
     gainXP(amount) {
         this.xp += amount;
 
-        // Check for level up
-        while (this.xp >= this.xpToNextLevel && this.level < 15) {
+        // Check for level up (cap at 100 for endless mode)
+        while (this.xp >= this.xpToNextLevel && this.level < 100) {
             this.levelUp();
         }
     }
@@ -162,16 +178,24 @@ class Player {
         this.xp -= this.xpToNextLevel;
         this.xpToNextLevel = this.getXPForNextLevel(this.level);
 
-        // Level-up bonuses
-        // +2 max HP and heal 2 HP
-        this.maxHealth += 2;
-        this.health = Math.min(this.health + 2, this.maxHealth);
+        // Level-up bonuses (increased for endless mode balance)
+        // +3 max HP and heal 3 HP
+        this.maxHealth += 3;
+        this.health = Math.min(this.health + 3, this.maxHealth);
 
-        // Alternate between +1 ATK and +1 DEF
-        if (this.level % 2 === 0) {
-            this.attack += 1;
-        } else {
-            this.defense += 1;
+        // +1 ATK and +1 DEF every level (no more alternating)
+        this.attack += 1;
+        this.defense += 1;
+
+        // Percentage bonus every 10 levels for scaling
+        if (this.level % 10 === 0) {
+            const hpBonus = Math.floor(this.maxHealth * 0.1); // +10% HP
+            const statBonus = Math.floor(this.attack * 0.05); // +5% stats
+
+            this.maxHealth += hpBonus;
+            this.health = Math.min(this.health + hpBonus, this.maxHealth);
+            this.attack += Math.max(1, statBonus);
+            this.defense += Math.max(1, statBonus);
         }
 
         return true; // Signal that level up occurred
@@ -224,6 +248,24 @@ class Player {
             if (this.statusEffects.haste.duration <= 0) {
                 this.statusEffects.haste.active = false;
                 messages.push({ type: 'haste_end' });
+            }
+        }
+
+        // Strength buff
+        if (this.statusEffects.strength.active) {
+            this.statusEffects.strength.duration--;
+            if (this.statusEffects.strength.duration <= 0) {
+                this.statusEffects.strength.active = false;
+                messages.push({ type: 'strength_end' });
+            }
+        }
+
+        // Shield buff
+        if (this.statusEffects.shield.active) {
+            this.statusEffects.shield.duration--;
+            if (this.statusEffects.shield.duration <= 0) {
+                this.statusEffects.shield.active = false;
+                messages.push({ type: 'shield_end' });
             }
         }
 

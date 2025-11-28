@@ -136,6 +136,15 @@ class SoundManager {
     playSpell() {
         this.playSequence([600, 800, 1000], 0.08, 'triangle', 0.25);
     }
+
+    playCriticalHit() {
+        // A sharper, more impactful sound for crits
+        this.playSequence([150, 100], 0.05, 'square', 0.6);
+        // Add a high pitched ping for emphasis
+        setTimeout(() => {
+            this.playTone(800, 0.1, 'sine', 0.3);
+        }, 50);
+    }
 }
 
 
