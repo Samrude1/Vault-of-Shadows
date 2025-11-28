@@ -207,16 +207,14 @@ class Item {
             case 'axe':
             case 'magic_staff':
                 const weaponData = Item.getItemData(this.type);
-                player.attack += weaponData.attackBonus;
-                player.defense += weaponData.defenseBonus;
+                player.equipWeapon(weaponData);
                 return `You equip the ${this.name}. Attack +${weaponData.attackBonus}${weaponData.defenseBonus > 0 ? ', Defense +' + weaponData.defenseBonus : ''}!`;
             case 'leather_armor':
             case 'chain_mail':
             case 'plate_armor':
             case 'magic_robes':
                 const armorData = Item.getItemData(this.type);
-                player.defense += armorData.defenseBonus;
-                player.attack += armorData.attackBonus;
+                player.equipArmor(armorData);
                 return `You equip the ${this.name}. Defense +${armorData.defenseBonus}${armorData.attackBonus > 0 ? ', Attack +' + armorData.attackBonus : ''}!`;
             case 'amulet':
                 return `You have retrieved the ${this.name}! You are victorious!`;

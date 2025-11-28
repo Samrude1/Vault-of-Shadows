@@ -26,6 +26,15 @@ class Player {
             stun: { active: false, duration: 0 },
             haste: { active: false, duration: 0 }
         };
+
+        // Equipment slots
+        this.equipment = {
+            weapon: null,
+            armor: null
+        };
+
+        // Inventory: Can hold 1 item (scroll or consumable)
+        this.inventory = null; // Stores item type (e.g., 'scroll_fireball')
     }
 
     addGold(amount) {
@@ -131,11 +140,12 @@ class Player {
 
     // XP and Leveling methods
     getXPForNextLevel(level) {
-        // Scaling formula: 50 + (level * 30)
-        // Level 1→2: 80 XP
-        // Level 2→3: 110 XP
-        // Level 3→4: 140 XP
-        return 50 + (level * 30);
+        // Exponential Curve: 50 * (1.15 ^ Level)
+        // Level 1: 57 XP
+        // Level 5: 100 XP
+        // Level 10: 202 XP
+        // Level 20: 818 XP
+        return Math.floor(50 * Math.pow(1.15, level));
     }
 
     gainXP(amount) {
@@ -233,6 +243,32 @@ class Player {
             this.statusEffects.burn.active ||
             this.statusEffects.stun.active ||
             this.statusEffects.haste.active;
+    }
+
+    equipWeapon(itemData) {
+        // Remove old weapon stats
+        if (this.equipment.weapon) {
+            this.attack -= this.equipment.weapon.attackBonus;
+            this.defense -= this.equipment.weapon.defenseBonus;
+        }
+
+        // Equip new weapon
+        this.equipment.weapon = itemData;
+        this.attack += itemData.attackBonus;
+        this.defense += itemData.defenseBonus;
+    }
+
+    equipArmor(itemData) {
+        // Remove old armor stats
+        if (this.equipment.armor) {
+            this.defense -= this.equipment.armor.defenseBonus;
+            this.attack -= this.equipment.armor.attackBonus;
+        }
+
+        // Equip new armor
+        this.equipment.armor = itemData;
+        this.defense += itemData.defenseBonus;
+        this.attack += itemData.attackBonus;
     }
 }
 

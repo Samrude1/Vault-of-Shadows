@@ -13,14 +13,44 @@ class Monster {
         this.attack = stats.attack;
         this.defense = stats.defense;
 
-        // Scale stats based on level (mild scaling to keep older monsters relevant)
-        // HP: +0.5 per level
-        // Atk: +0.2 per level
-        // Def: +0.1 per level
+        // Scale stats based on level (Percentage-Based Scaling for "Long Game")
+        // HP: +15% per level
+        // Atk: +0.4 per level
+        // Def: +0.2 per level
         if (level > 1) {
-            this.maxHealth += Math.floor(level * 0.5);
-            this.attack += Math.floor(level * 0.2);
-            this.defense += Math.floor(level * 0.1);
+            const levelScale = level - 1;
+            this.maxHealth = Math.floor(this.maxHealth * (1 + (levelScale * 0.15)));
+            this.attack += Math.floor(levelScale * 0.4);
+            this.defense += Math.floor(levelScale * 0.2);
+        }
+
+        // Monster Tiers (Veteran, Elite, Champion)
+        this.tier = 'normal';
+        if (level >= 10) {
+            const roll = Math.random();
+            if (level >= 30 && roll < 0.10) {
+                this.tier = 'champion';
+                this.name = `Champion ${this.name}`;
+                this.color = '#ef4444'; // Red
+                this.maxHealth *= 2.0;
+                this.attack = Math.floor(this.attack * 1.5);
+                this.defense += 2;
+                this.xpMultiplier = 3;
+            } else if (level >= 20 && roll < 0.25) {
+                this.tier = 'elite';
+                this.name = `Elite ${this.name}`;
+                this.color = '#f97316'; // Orange
+                this.maxHealth = Math.floor(this.maxHealth * 1.6);
+                this.attack = Math.floor(this.attack * 1.3);
+                this.defense += 1;
+                this.xpMultiplier = 2;
+            } else if (roll < 0.20) {
+                this.tier = 'veteran';
+                this.name = `Veteran ${this.name}`;
+                this.maxHealth = Math.floor(this.maxHealth * 1.3);
+                this.attack = Math.floor(this.attack * 1.15);
+                this.xpMultiplier = 1.5;
+            }
         }
 
         this.health = this.maxHealth;
@@ -438,9 +468,10 @@ class Monster {
                 this.shieldActive = (this.turnCounter % 2 === 0);
             }
 
-            // Lich: Summon skeletons every N turns
+            // Lich: Summon skeletons every N turns (only if player is nearby)
             if (this.type === 'lich' && this.summonInterval > 0) {
-                if (this.turnCounter % this.summonInterval === 0) {
+                const dist = Math.abs(player.x - this.x) + Math.abs(player.y - this.y);
+                if (dist < 10 && this.turnCounter % this.summonInterval === 0) {
                     this.shouldSummon = true; // Signal to game.js to spawn minions
                 }
             }

@@ -45,9 +45,22 @@ class Renderer {
                     const isVisible = game.isVisible(dungeonX, dungeonY);
                     const isExplored = game.isExplored(dungeonX, dungeonY);
 
-                    this.drawTile(x * this.tileSize, y * this.tileSize, tile, isVisible, isExplored);
+                    this.drawTile(x * this.tileSize, y * this.tileSize, tile, isVisible, isExplored, game.currentLevel);
                 }
             }
+        }
+
+        // Render traps (only if triggered/revealed)
+        if (game.traps) {
+            game.traps.forEach(trap => {
+                if (trap.triggered && game.isVisible(trap.x, trap.y)) {
+                    const screenX = (trap.x - cameraX) * this.tileSize;
+                    const screenY = (trap.y - cameraY) * this.tileSize;
+                    if (this.isOnScreen(screenX, screenY)) {
+                        this.drawToken(screenX, screenY, '^', '#ef4444', 'trap');
+                    }
+                }
+            });
         }
 
         // Render items
@@ -84,7 +97,7 @@ class Renderer {
         return x >= 0 && x < this.canvas.width && y >= 0 && y < this.canvas.height;
     }
 
-    drawTile(x, y, tile, isVisible, isExplored) {
+    drawTile(x, y, tile, isVisible, isExplored, level = 1) {
         if (!isVisible && !isExplored) return;
 
         const ctx = this.ctx;
@@ -97,7 +110,7 @@ class Renderer {
 
         switch (tile) {
             case '#': // Wall
-                this.drawWall(x, y, isVisible);
+                this.drawWall(x, y, isVisible, level);
                 break;
             case '.': // Floor
                 this.drawFloor(x, y, isVisible);
@@ -123,15 +136,48 @@ class Renderer {
         ctx.globalAlpha = 1.0;
     }
 
-    drawWall(x, y, isVisible) {
+    drawWall(x, y, isVisible, level = 1) {
         const ctx = this.ctx;
         const s = this.tileSize;
 
-        // Neutral/Dark Grey walls for better contrast
-        // Less blue, more stone-like
-        const baseColor = '#404040';
-        const darkColor = '#262626';
-        const lightColor = '#525252';
+        // Progressive wall colors every 3 levels
+        // Colors are chosen to be always visible (never too dark)
+        let baseColor, darkColor, lightColor;
+
+        const tier = Math.floor((level - 1) / 3); // 0 for levels 1-3, 1 for 4-6, etc.
+
+        switch (tier % 6) { // Cycle through 6 color schemes
+            case 0: // Levels 1-3: Gray stone (default)
+                baseColor = '#404040';
+                darkColor = '#262626';
+                lightColor = '#525252';
+                break;
+            case 1: // Levels 4-6: Brown/Earth stone
+                baseColor = '#4a3f35';
+                darkColor = '#2d2419';
+                lightColor = '#5c4d3f';
+                break;
+            case 2: // Levels 7-9: Blue-gray stone
+                baseColor = '#3d4a52';
+                darkColor = '#252e33';
+                lightColor = '#4f5f6b';
+                break;
+            case 3: // Levels 10-12: Purple-gray stone
+                baseColor = '#4a3f52';
+                darkColor = '#2d2433';
+                lightColor = '#5c4f6b';
+                break;
+            case 4: // Levels 13-15: Green-gray stone
+                baseColor = '#3f4a3f';
+                darkColor = '#242d24';
+                lightColor = '#4f5f4f';
+                break;
+            case 5: // Levels 16-18: Red-gray stone
+                baseColor = '#4a3f3f';
+                darkColor = '#2d2424';
+                lightColor = '#5c4f4f';
+                break;
+        }
 
         // Main block
         ctx.fillStyle = baseColor;

@@ -136,6 +136,18 @@ class GameCombat {
     }
 
     spawnMinions(boss, type, count) {
+        // Limit total minions to prevent flooding
+        const nearbyMinions = this.game.monsters.filter(m =>
+            m.type === type &&
+            Math.abs(m.x - boss.x) < 8 &&
+            Math.abs(m.y - boss.y) < 8
+        ).length;
+
+        if (nearbyMinions >= 4) {
+            this.game.addMessage(`The ${boss.name} tries to summon minions, but there is no room!`);
+            return;
+        }
+
         let spawned = 0;
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
@@ -159,76 +171,49 @@ class GameCombat {
     }
 
     selectMonsterType(level) {
-        // Rebalanced distributions for smoother difficulty curve
-        const distributions = {
-            1: [
-                { type: 'kobold', weight: 60 },
-                { type: 'bat', weight: 25 },
-                { type: 'goblin', weight: 15 }
-            ],
-            2: [
-                { type: 'kobold', weight: 60 },
-                { type: 'bat', weight: 25 },
-                { type: 'goblin', weight: 15 }
-            ],
-            3: [
-                { type: 'kobold', weight: 60 },
-                { type: 'bat', weight: 25 },
-                { type: 'goblin', weight: 15 }
-            ],
-            4: [
-                { type: 'kobold', weight: 30 },
-                { type: 'bat', weight: 15 },
-                { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'orc', weight: 15 }
-            ],
-            5: [
-                { type: 'kobold', weight: 30 },
-                { type: 'bat', weight: 15 },
-                { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'orc', weight: 15 }
-            ],
-            6: [
-                { type: 'kobold', weight: 30 },
-                { type: 'bat', weight: 15 },
-                { type: 'goblin', weight: 20 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'orc', weight: 15 }
-            ],
-            7: [
-                { type: 'orc', weight: 25 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'goblin', weight: 15 },
-                { type: 'troll', weight: 20 },
-                { type: 'zombie', weight: 20 }
-            ],
-            8: [
-                { type: 'orc', weight: 25 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'goblin', weight: 15 },
-                { type: 'troll', weight: 20 },
-                { type: 'zombie', weight: 20 }
-            ],
-            9: [
-                { type: 'orc', weight: 25 },
-                { type: 'skeleton', weight: 20 },
-                { type: 'goblin', weight: 15 },
-                { type: 'troll', weight: 20 },
-                { type: 'zombie', weight: 20 }
-            ]
-        };
+        // Progressive monster upgrades every 3 levels
+        // Levels 1-3: Weak monsters only (kobold, bat, goblin)
+        // Levels 4-6: Medium monsters introduced (orc, skeleton)
+        // Levels 7-9: Strong monsters (troll, zombie)
+        // Levels 10+: Deadly monsters (dragon)
 
-        const deepDistribution = [
-            { type: 'troll', weight: 25 },
-            { type: 'zombie', weight: 25 },
-            { type: 'skeleton', weight: 15 },
-            { type: 'orc', weight: 15 },
-            { type: 'dragon', weight: 20 }
-        ];
+        let distribution;
 
-        const distribution = level >= 10 ? deepDistribution : (distributions[level] || distributions[1]);
+        if (level <= 3) {
+            // TIER 1 (Levels 1-3): Only weak monsters
+            distribution = [
+                { type: 'kobold', weight: 50 },
+                { type: 'bat', weight: 30 },
+                { type: 'goblin', weight: 20 }
+            ];
+        } else if (level <= 6) {
+            // TIER 2 (Levels 4-6): Weak monsters phased out, medium monsters introduced
+            distribution = [
+                { type: 'kobold', weight: 20 },
+                { type: 'bat', weight: 10 },
+                { type: 'goblin', weight: 15 },
+                { type: 'skeleton', weight: 30 },
+                { type: 'orc', weight: 25 }
+            ];
+        } else if (level <= 9) {
+            // TIER 3 (Levels 7-9): Medium monsters remain, strong monsters introduced
+            distribution = [
+                { type: 'skeleton', weight: 20 },
+                { type: 'orc', weight: 20 },
+                { type: 'troll', weight: 30 },
+                { type: 'zombie', weight: 30 }
+            ];
+        } else {
+            // TIER 4 (Levels 10+): Strong and deadly monsters
+            distribution = [
+                { type: 'troll', weight: 25 },
+                { type: 'zombie', weight: 25 },
+                { type: 'orc', weight: 10 },
+                { type: 'skeleton', weight: 10 },
+                { type: 'dragon', weight: 30 }
+            ];
+        }
+
         const totalWeight = distribution.reduce((sum, item) => sum + item.weight, 0);
 
         let random = Math.random() * totalWeight;
@@ -242,7 +227,7 @@ class GameCombat {
         return 'kobold';
     }
 
-    getXPForMonster(monsterType) {
+    getXPForMonster(monster) {
         const xpTable = {
             kobold: 10,
             bat: 8,
@@ -258,6 +243,7 @@ class GameCombat {
             ancient_dragon: 500,
             amulet_guardian: 400
         };
-        return xpTable[monsterType] || 10;
+        const baseXP = xpTable[monster.type] || 10;
+        return Math.floor(baseXP * (monster.xpMultiplier || 1));
     }
 }

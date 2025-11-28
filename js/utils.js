@@ -1,6 +1,6 @@
 class Utils {
 
-    // Staattinen metodi: ei tarvitse this-viitettä
+    // Static method: does not need 'this' reference
     static rollDice(num, sides) {
         let total = 0;
         for (let i = 0; i < num; i++) {
@@ -9,6 +9,6 @@ class Utils {
         return total;
     }
 
-    // Tähän voit lisätä muita staattisia apufunktioita myöhemmin
+    // You can add other static helper functions here later
     // static clamp(value, min, max) { ... }
 }

@@ -11,13 +11,13 @@ class Game {
         this.player = null;
         this.monsters = [];
         this.items = [];
+        this.traps = [];
 
         this.currentLevel = 1;
         this.gameOver = false;
         this.waitingForInput = false;
         this.hasAmulet = false;
         this.audioEnabled = false;
-        this.shopOpen = false;
         this.shopPosition = null;
 
         this.messages = [];
@@ -39,6 +39,8 @@ class Game {
         // Initialize modules
         this.combat = new GameCombat(this);
         this.rooms = new GameRooms(this);
+        this.shop = new GameShop(this);
+        this.ui = new GameUI(this);
 
         // Enable audio on first user interaction
         const enableAudio = () => {
@@ -76,6 +78,7 @@ class Game {
 
         // Create monsters
         this.monsters = [];
+        this.traps = [];
         const numMonsters = 4 + Math.floor(this.currentLevel * 1.5); // Reduced from 5 + (level * 2)
         const usedPositions = new Set();
         let attempts = 0;
@@ -230,7 +233,7 @@ class Game {
         const muteToggle = document.getElementById('mute-toggle');
 
         // Set initial icon based on mute state
-        muteToggle.textContent = this.sound.isMuted() ? '??' : '??';
+        muteToggle.textContent = this.sound.isMuted() ? '🔇' : '🔊';
 
         // Remove any existing event listeners by cloning and replacing
         const muteClone = muteToggle.cloneNode(true);
@@ -239,7 +242,7 @@ class Game {
         // Mute toggle
         muteClone.addEventListener('click', () => {
             const muted = this.sound.toggleMute();
-            muteClone.textContent = muted ? '??' : '??';
+            muteClone.textContent = muted ? '🔇' : '🔊';
         });
     }
 
@@ -262,12 +265,19 @@ class Game {
     handleInput() {
         if (!this.waitingForInput) {
             // Check for shop interaction
-            if (this.input.isShop() && !this.shopOpen) {
+            if (this.input.isShop() && !this.shop.shopOpen) {
                 const playerTile = this.dungeon.getTile(this.player.x, this.player.y);
                 if (playerTile === '&') {
                     this.openShop();
                     return;
                 }
+            }
+
+            // Check for use item
+            if (this.input.isUseItem()) {
+                this.waitingForInput = true;
+                this.useInventoryItem();
+                return;
             }
 
             const movement = this.input.getMovement();
@@ -290,6 +300,40 @@ class Game {
         this.combat.monsterTurn();
 
         // Check if player is still alive after monster turn
+        if (!this.player.isAlive()) {
+            this.endGame(false);
+        } else {
+            this.updateUI();
+        }
+
+        // Small delay before accepting next input
+        setTimeout(() => {
+            this.waitingForInput = false;
+        }, 100);
+    }
+
+    useInventoryItem() {
+        // Check if player has an item
+        if (!this.player.inventory) {
+            this.addMessage('No item in inventory!');
+            this.waitingForInput = false;
+            return;
+        }
+
+        const itemType = this.player.inventory;
+        const itemData = Item.getItemData(itemType);
+
+        // Use the item (trigger scroll effect)
+        this.handleScrollEffect(itemType, itemData.name);
+
+        // Clear inventory
+        this.player.inventory = null;
+        this.addMessage(`You used ${itemData.name}!`);
+
+        // Monster turn happens after using item
+        this.combat.monsterTurn();
+
+        // Check if player is still alive
         if (!this.player.isAlive()) {
             this.endGame(false);
         } else {
@@ -356,7 +400,7 @@ class Game {
             // Display attack message with crit indicator
             let attackMsg = `You attack the ${monsterAtPos.name} for ${result.damage} damage`;
             if (result.isCrit) {
-                attackMsg += ' ?? CRITICAL HIT!';
+                attackMsg += ' 💥 CRITICAL HIT!';
             }
             attackMsg += '!';
             this.addMessage(attackMsg);
@@ -370,7 +414,7 @@ class Game {
                     monsterAtPos.x = newPos.x;
                     monsterAtPos.y = newPos.y;
                     monsterAtPos.shouldTeleport = false;
-                    this.addMessage(`The ${monsterAtPos.name} teleports away! ??`);
+                    this.addMessage(`The ${monsterAtPos.name} teleports away! 🌀`);
                 }
 
                 // Kobold King Summon (triggered by damage threshold)
@@ -381,7 +425,7 @@ class Game {
 
             if (result.killed) {
                 // Award XP for kill
-                const xpReward = this.combat.getXPForMonster(monsterAtPos.type);
+                const xpReward = this.combat.getXPForMonster(monsterAtPos);
                 this.player.gainXP(xpReward);
 
                 // Generate drops from killed monster
@@ -396,7 +440,7 @@ class Game {
                 // Check if player leveled up
                 if (this.player.level > this.currentPlayerLevel) {
                     this.currentPlayerLevel = this.player.level;
-                    this.addMessage(`? LEVEL UP! You are now level ${this.player.level}!`);
+                    this.addMessage(`🌟 LEVEL UP! You are now level ${this.player.level}!`);
                     this.sound.playItemPickup(); // Use pickup sound for level up
                 }
             } else {
@@ -405,11 +449,11 @@ class Game {
 
                 // Display counterattack message with crit/dodge indicators
                 if (counterResult.dodged) {
-                    this.addMessage(`The ${monsterAtPos.name} attacks but you DODGE! ?`);
+                    this.addMessage(`The ${monsterAtPos.name} attacks but you DODGE! ⚡`);
                 } else {
                     let counterMsg = `The ${monsterAtPos.name} attacks you for ${counterResult.damage} damage`;
                     if (counterResult.isCrit) {
-                        counterMsg += ' ?? CRITICAL!';
+                        counterMsg += ' 💥 CRITICAL!';
                     }
                     counterMsg += '!';
                     this.addMessage(counterMsg);
@@ -423,7 +467,7 @@ class Game {
                         );
                         const effectName = counterResult.statusEffect.type.charAt(0).toUpperCase() +
                             counterResult.statusEffect.type.slice(1);
-                        this.addMessage(`You are ${effectName}ed! ??`);
+                        this.addMessage(`You are ${effectName}ed! 😵`);
                     }
                 }
 
@@ -434,18 +478,48 @@ class Game {
                 }
             }
         } else if (itemAtPos) {
+            // Check if it's a scroll and inventory is full
+            if (itemAtPos.type.startsWith('scroll_') && this.player.inventory !== null) {
+                this.addMessage('Inventory full! Cannot pick up scroll. Use your current item first (Press U).');
+                // Still allow movement - don't return early
+                this.player.move(movement.dx, movement.dy, this.dungeon);
+
+                // Monster turn
+                this.combat.monsterTurn();
+
+                // Check if player is still alive
+                if (!this.player.isAlive()) {
+                    this.endGame(false);
+                } else {
+                    this.updateUI();
+                }
+
+                setTimeout(() => {
+                    this.waitingForInput = false;
+                }, 100);
+                return;
+            }
+
             // Pick up item
             const message = itemAtPos.use(this.player);
             itemAtPos.pickedUp = true;
 
             // Check if it's a scroll (returns object with scrollType)
             if (typeof message === 'object' && message.scrollType) {
-                this.handleScrollEffect(message.scrollType, message.scrollName);
+                // Add to inventory instead of using immediately
+                this.player.inventory = message.scrollType;
+                this.addMessage(`You picked up ${message.scrollName}. Press U to use.`);
             } else {
                 this.addMessage(message);
             }
 
             this.player.move(movement.dx, movement.dy, this.dungeon);
+
+            // Check for traps
+            const trap = this.traps.find(t => t.x === this.player.x && t.y === this.player.y && !t.triggered);
+            if (trap) {
+                this.triggerTrap(trap);
+            }
 
             // Play appropriate sound based on item type
             if (itemAtPos.type === 'amulet') {
@@ -495,9 +569,9 @@ class Game {
         const statusMessages = this.player.processStatusEffects();
         statusMessages.forEach(msg => {
             if (msg.type === 'poison') {
-                this.addMessage(`?? Poison deals ${msg.damage} damage!`);
+                this.addMessage(`☠️ Poison deals ${msg.damage} damage!`);
             } else if (msg.type === 'burn') {
-                this.addMessage(`?? Burn deals ${msg.damage} damage!`);
+                this.addMessage(`🔥 Burn deals ${msg.damage} damage!`);
             } else if (msg.type === 'poison_end') {
                 this.addMessage('The poison wears off.');
             } else if (msg.type === 'burn_end') {
@@ -801,83 +875,15 @@ class Game {
     }
 
     addMessage(text) {
-        this.messages.push(text);
-        if (this.messages.length > this.maxMessages) {
-            this.messages.shift();
-        }
-        this.updateMessages();
+        this.ui.addMessage(text);
     }
 
     updateMessages() {
-        const messagesEl = document.getElementById('messages');
-        messagesEl.innerHTML = '';
-        this.messages.forEach((msg, i) => {
-            const div = document.createElement('div');
-            div.className = 'message';
-            if (i === this.messages.length - 1) {
-                div.className += ' new';
-            }
-            div.textContent = msg;
-            messagesEl.appendChild(div);
-        });
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        this.ui.updateMessages();
     }
 
     updateUI() {
-        document.getElementById('health').textContent = `${this.player.health}/${this.player.maxHealth}`;
-        document.getElementById('player-level').textContent = this.player.level;
-        document.getElementById('depth').textContent = this.currentLevel;
-        document.getElementById('gold').textContent = this.player.gold;
-        document.getElementById('attack').textContent = this.player.attack;
-        document.getElementById('defense').textContent = this.player.defense;
-        document.getElementById('hunger').textContent = `${this.player.hunger}/${this.player.maxHunger}`;
-
-        // Update XP bar
-        const xpPercent = (this.player.xp / this.player.xpToNextLevel) * 100;
-        document.getElementById('xp-bar').style.width = `${xpPercent}%`;
-        document.getElementById('xp-text').textContent = `${this.player.xp}/${this.player.xpToNextLevel}`;
-
-        // Update health color
-        const healthEl = document.getElementById('health');
-        const healthPercent = this.player.health / this.player.maxHealth;
-        if (healthPercent > 0.6) {
-            healthEl.style.color = '#00ff00';
-        } else if (healthPercent > 0.3) {
-            healthEl.style.color = '#ffff00';
-        } else {
-            healthEl.style.color = '#ff0000';
-        }
-
-        // Update hunger color
-        const hungerEl = document.getElementById('hunger');
-        const hungerPercent = this.player.hunger / this.player.maxHunger;
-        if (hungerPercent > 0.6) {
-            hungerEl.style.color = '#00ff00';
-        } else if (hungerPercent > 0.3) {
-            hungerEl.style.color = '#ffff00';
-        } else {
-            hungerEl.style.color = '#ff0000';
-        }
-
-        // Update status effects display
-        let statusText = '';
-        if (this.player.statusEffects.poison.active) {
-            statusText += `?? Poison (${this.player.statusEffects.poison.duration}) `;
-        }
-        if (this.player.statusEffects.burn.active) {
-            statusText += `?? Burn (${this.player.statusEffects.burn.duration}) `;
-        }
-        if (this.player.statusEffects.stun.active) {
-            statusText += `?? Stunned (${this.player.statusEffects.stun.duration}) `;
-        }
-
-        // Update status effects in messages area or create a status line
-        const healthEl2 = document.getElementById('health');
-        if (statusText) {
-            healthEl2.title = statusText.trim(); // Show as tooltip
-        } else {
-            healthEl2.title = '';
-        }
+        this.ui.update();
     }
 
     render() {
@@ -893,7 +899,7 @@ class Game {
                 const newPos = this.dungeon.getRandomFloorPosition();
                 this.player.x = newPos.x;
                 this.player.y = newPos.y;
-                this.addMessage('You are teleported to a new location! ??');
+                this.addMessage('You are teleported to a new location! 🌀');
                 this.updateVisibility();
                 break;
             case 'scroll_magic_missile':
@@ -913,10 +919,10 @@ class Game {
                 if (nearest && minDist < 8) {
                     const damage = 20;
                     nearest.takeDamage(damage);
-                    this.addMessage(`A magic missile strikes the ${nearest.name} for ${damage} damage! ?`);
+                    this.addMessage(`A magic missile strikes the ${nearest.name} for ${damage} damage! ✨`);
                     if (!nearest.isAlive()) {
                         this.addMessage(`The ${nearest.name} is killed!`);
-                        this.player.gainXP(this.combat.getXPForMonster(nearest.type));
+                        this.player.gainXP(this.combat.getXPForMonster(nearest));
                     }
                 } else {
                     this.addMessage('But nothing happens.');
@@ -924,19 +930,19 @@ class Game {
                 break;
             case 'scroll_healing':
                 this.player.heal(20);
-                this.addMessage('You feel much better! ??');
+                this.addMessage('You feel much better! 💖');
                 break;
             case 'scroll_enchantment':
                 if (Math.random() < 0.5) {
                     this.player.attack += 1;
-                    this.addMessage('Your weapon glows with magical energy! (+1 Attack) ??');
+                    this.addMessage('Your weapon glows with magical energy! (+1 Attack) ⚔️');
                 } else {
                     this.player.defense += 1;
-                    this.addMessage('Your armor hardens! (+1 Defense) ???');
+                    this.addMessage('Your armor hardens! (+1 Defense) 🛡️');
                 }
                 break;
             case 'scroll_fireball':
-                this.addMessage('A massive fireball explodes around you! ??');
+                this.addMessage('A massive fireball explodes around you! 🔥');
                 let hitCount = 0;
                 this.monsters.forEach(m => {
                     if (m.isAlive()) {
@@ -946,7 +952,7 @@ class Game {
                             m.takeDamage(damage);
                             this.addMessage(`The ${m.name} is burned for ${damage} damage!`);
                             if (!m.isAlive()) {
-                                this.player.gainXP(this.combat.getXPForMonster(m.type));
+                                this.player.gainXP(this.combat.getXPForMonster(m));
                             }
                             hitCount++;
                         }
@@ -955,7 +961,7 @@ class Game {
                 if (hitCount === 0) this.addMessage('The fireball hits nothing.');
                 break;
             case 'scroll_freeze':
-                this.addMessage('A freezing blast expands from you! ??');
+                this.addMessage('A freezing blast expands from you! ❄️');
                 this.monsters.forEach(m => {
                     if (m.isAlive()) {
                         const dist = Math.max(Math.abs(m.x - this.player.x), Math.abs(m.y - this.player.y));
@@ -968,14 +974,14 @@ class Game {
                 break;
             case 'scroll_haste':
                 this.player.applyStatusEffect('haste', 10);
-                this.addMessage('You feel incredibly fast! (Double speed) ?');
+                this.addMessage('You feel incredibly fast! (Double speed) ⏩');
                 break;
             case 'scroll_identify':
-                this.addMessage('You gain knowledge of the items on this floor! ??');
+                this.addMessage('You gain knowledge of the items on this floor! 📜');
                 // For now, just a message as we don't have unidentified items system fully working
                 break;
             case 'scroll_mapping':
-                this.addMessage('The layout of this level is revealed! ???');
+                this.addMessage('The layout of this level is revealed! 🗺️');
                 for (let y = 0; y < this.dungeonHeight; y++) {
                     for (let x = 0; x < this.dungeonWidth; x++) {
                         this.explored[y][x] = true;
@@ -984,141 +990,77 @@ class Game {
                 this.updateVisibility();
                 break;
             case 'scroll_summon':
-                this.addMessage('You summon a friendly Spirit! ??');
-                // Deal damage to a random enemy as a "summoned ally attack"
-                let target = null;
+                this.addMessage('You summon a friendly Spirit! 👻');
+                // Find the nearest enemy
+                let nearestTarget = null;
+                let nearestDist = Infinity;
                 this.monsters.forEach(m => {
-                    if (m.isAlive() && !target) target = m;
-                });
-                if (target) {
-                    target.takeDamage(10);
-                    this.addMessage(`The Spirit attacks the ${target.name} for 10 damage!`);
-                    if (!target.isAlive()) {
-                        this.player.gainXP(this.combat.getXPForMonster(target.type));
+                    if (m.isAlive()) {
+                        const dist = Math.abs(m.x - this.player.x) + Math.abs(m.y - this.player.y);
+                        if (dist < nearestDist) {
+                            nearestDist = dist;
+                            nearestTarget = m;
+                        }
                     }
+                });
+                if (nearestTarget) {
+                    const damage = 15; // Spirit does 15 damage
+                    nearestTarget.takeDamage(damage);
+                    this.addMessage(`The Spirit attacks the ${nearestTarget.name} for ${damage} damage!`);
+                    if (!nearestTarget.isAlive()) {
+                        this.addMessage(`The ${nearestTarget.name} is destroyed!`);
+                        this.player.gainXP(this.combat.getXPForMonster(nearestTarget));
+                    }
+                } else {
+                    this.addMessage('The Spirit finds no enemies to attack.');
                 }
                 break;
         }
     }
 
     openShop() {
-        this.shopOpen = true;
-        this.sound.playShop();
-
-        const shopOverlay = document.getElementById('shop-overlay');
-        const shopGoldAmount = document.getElementById('shop-gold-amount');
-        const shopClose = document.getElementById('shop-close');
-
-        // Update gold display
-        shopGoldAmount.textContent = this.player.gold;
-
-        // Show shop
-        shopOverlay.classList.remove('hidden');
-
-        // Setup shop item click handlers
-        // Setup shop item click handlers
-        const shopItems = document.querySelectorAll('.shop-item');
-        shopItems.forEach(item => {
-            // Remove existing listeners by cloning
-            const newItem = item.cloneNode(true);
-            item.parentNode.replaceChild(newItem, item);
-
-            const itemType = newItem.getAttribute('data-item');
-            let price = parseInt(newItem.getAttribute('data-price')); // Base price
-
-            // Dynamic pricing logic
-            if (itemType === 'attack_upgrade') {
-                // Price increases with current attack level
-                // Base attack is 4. First upgrade (to 5) costs 50.
-                // Formula: 50 * (current - base + 1)
-                const upgradeLevel = this.player.attack - 3;
-                price = 50 * upgradeLevel;
-            } else if (itemType === 'defense_upgrade') {
-                // Base defense is 2. First upgrade (to 3) costs 50.
-                const upgradeLevel = this.player.defense - 1;
-                price = 50 * upgradeLevel;
-            } else {
-                // Consumables scale slightly with dungeon depth
-                price = price + (this.currentLevel * 2);
-            }
-
-            // Update UI with new price
-            newItem.setAttribute('data-price', price);
-            const priceEl = newItem.querySelector('.shop-item-price');
-            if (priceEl) {
-                priceEl.textContent = `${price} gold`;
-            }
-
-            newItem.addEventListener('click', () => {
-                const currentPrice = parseInt(newItem.getAttribute('data-price'));
-                this.purchaseItem(itemType, currentPrice);
-            });
-        });
-
-        // Setup close button
-        const newCloseBtn = shopClose.cloneNode(true);
-        shopClose.parentNode.replaceChild(newCloseBtn, shopClose);
-        newCloseBtn.addEventListener('click', () => {
-            this.closeShop();
-        });
-
-        // Setup ESC key to close shop
-        const escHandler = (e) => {
-            if (e.key === 'Escape') {
-                this.closeShop();
-                window.removeEventListener('keydown', escHandler);
-            }
-        };
-        window.addEventListener('keydown', escHandler);
-
-        this.addMessage('Welcome to the shop! Press B or ESC to close.');
+        this.shop.open();
     }
 
     closeShop() {
-        this.shopOpen = false;
-        const shopOverlay = document.getElementById('shop-overlay');
-        shopOverlay.classList.add('hidden');
+        this.shop.close();
     }
 
     purchaseItem(itemType, price) {
-        if (this.player.gold < price) {
-            this.addMessage('Not enough gold!');
-            return;
-        }
-
-        this.player.gold -= price;
-        this.sound.playPurchase();
-
-        switch (itemType) {
-            case 'health_potion':
-                this.player.heal(10);
-                this.addMessage(`Purchased Health Potion for ${price} gold. +10 HP!`);
-                break;
-            case 'rations':
-                this.player.eat(30);
-                this.addMessage(`Purchased Rations for ${price} gold. Hunger restored!`);
-                break;
-            case 'bread':
-                this.player.eat(20);
-                this.addMessage(`Purchased Bread for ${price} gold. Hunger restored!`);
-                break;
-            case 'attack_upgrade':
-                this.player.attack += 1;
-                this.addMessage(`Purchased Attack Upgrade for ${price} gold. Attack +1!`);
-                break;
-            case 'defense_upgrade':
-                this.player.defense += 1;
-                this.addMessage(`Purchased Defense Upgrade for ${price} gold. Defense +1!`);
-                break;
-        }
-
-        // Update shop gold display
-        document.getElementById('shop-gold-amount').textContent = this.player.gold;
-        this.updateUI();
+        this.shop.purchaseItem(itemType, price);
     }
 
     // Helper function to select monster type based on dungeon depth
 
+    triggerTrap(trap) {
+        trap.triggered = true;
+        this.sound.playEnemyHit(); // Use hit sound for trap trigger
+
+        switch (trap.type) {
+            case 'spikes':
+                const damage = 5 + Math.floor(this.currentLevel * 2);
+                this.player.takeDamage(damage);
+                this.addMessage(`⚠️ You step on a Spike Trap! It deals ${damage} damage!`);
+                break;
+            case 'poison':
+                // Force apply poison even if already poisoned (reset duration)
+                this.player.statusEffects.poison.active = true;
+                this.player.statusEffects.poison.duration = 10;
+                this.addMessage(`⚠️ You trigger a Poison Gas Trap! You are poisoned! ☠️`);
+                break;
+            case 'summon':
+                this.addMessage(`⚠️ You trigger an Alarm Trap! Monsters appear! 🚨`);
+                this.combat.spawnMinions({ x: this.player.x, y: this.player.y, name: 'Trap' }, 'kobold', 3);
+                break;
+            case 'teleport':
+                this.addMessage(`⚠️ You step on a Teleport Trap! 🌀`);
+                const newPos = this.dungeon.getRandomFloorPosition();
+                this.player.x = newPos.x;
+                this.player.y = newPos.y;
+                this.updateVisibility();
+                break;
+        }
+    }
 }
 
 // Start the game when page loads

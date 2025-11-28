@@ -9,7 +9,7 @@ class InputHandler {
             this.lastKey = key;
 
             // Prevent default browser behavior for game keys
-            if (['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'b', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+            if (['w', 'a', 's', 'd', 'q', 'e', 'z', 'c', 'b', 'u', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
                 e.preventDefault();
             }
         });
@@ -44,6 +44,10 @@ class InputHandler {
 
     isShop() {
         return this.isPressed('b');
+    }
+
+    isUseItem() {
+        return this.isPressed('u');
     }
 
     consumeLastKey() {

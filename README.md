@@ -1,6 +1,6 @@
 # Vault Of Shadows - Dungeon Crawler Game
 
-**Version 2.4** - Phase 2 Complete: Bosses, Special Rooms, and Enhanced Combat!
+**Version 3.0** - Phase 3 In Progress: Mechanics Overhaul & Long Game Update
 
 ## About
 
@@ -9,7 +9,12 @@ Vault of Shadows is a reimagining of the classic 1980 Rogue game, built with HTM
 ![Vault of Shadows - Gameplay Screenshot](screenshot.png?v3)
 _Explore dark dungeons, fight monsters, and find the Amulet of Yendor._
 
-## New Features (v2.4 - Phase 2 Update) - ✅ Complete
+## New Features (v3.0 - Mechanics Overhaul) - ✅ Implemented
+- **Exponential XP Curve**: Leveling becomes progressively harder, preventing "god mode" in late game.
+- **Dynamic Monster Scaling**: Monsters gain %-based stats per level to remain dangerous deep in the dungeon.
+- **Monster Tiers**: Face off against **Veteran**, **Elite**, and **Champion** variants of enemies with unique stats and rewards.
+
+## Features (v2.4 - Phase 2 Update) - ✅ Complete
 
 The game has been significantly expanded with deep RPG mechanics and unique content:
 
@@ -100,16 +105,19 @@ rogue/
 ├── css/
 │   └── style.css       # Modern styling and glassmorphism effects
 ├── js/
-│   ├── game.js         # Core game loop and UI
+│   ├── game.js         # Core game loop
 │   ├── GameCombat.js   # Combat logic, Boss AI, XP system
 │   ├── GameRooms.js    # Special room generation
+│   ├── GameShop.js     # Shop logic and pricing
+│   ├── GameUI.js       # UI updates and message log
 │   ├── dungeon.js      # Procedural generation algorithms
 │   ├── renderer.js     # Advanced canvas drawing
 │   ├── player.js       # Player logic
 │   ├── monster.js      # Monster AI and types
 │   ├── item.js         # Item systems
 │   ├── input.js        # Input handling
-│   └── sound.js        # Procedural audio
+│   ├── sound.js        # Procedural audio
+│   └── utils.js        # Utility functions
 └── README.md           # This file
 ```
 

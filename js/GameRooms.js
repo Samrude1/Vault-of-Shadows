@@ -36,11 +36,28 @@ class GameRooms {
                     break;
 
                 case 'trap':
+                    // Place a tempting item in the center
                     const trapScrolls = ['scroll_fireball', 'scroll_freeze', 'scroll_haste', 'scroll_mapping'];
                     const scrollType = trapScrolls[Math.floor(Math.random() * trapScrolls.length)];
                     this.game.items.push(new Item(centerX, centerY, scrollType));
 
-                    const numTrapMonsters = 2 + Math.floor(Math.random() * 2);
+                    // Surround the item with hidden traps
+                    // 50% chance for each tile in the room to be a trap (except the item itself)
+                    for (let y = room.y + 1; y < room.y + room.height - 1; y++) {
+                        for (let x = room.x + 1; x < room.x + room.width - 1; x++) {
+                            if (x === centerX && y === centerY) continue; // Don't trap the item itself
+
+                            // Ensure trap is on a walkable floor tile
+                            if (this.game.dungeon.isWalkable(x, y) && Math.random() < 0.4) {
+                                const trapTypes = ['spikes', 'poison', 'summon', 'teleport'];
+                                const trapType = trapTypes[Math.floor(Math.random() * trapTypes.length)];
+                                this.game.traps.push({ x, y, type: trapType, triggered: false });
+                            }
+                        }
+                    }
+
+                    // Add some visible monsters too
+                    const numTrapMonsters = 1 + Math.floor(Math.random() * 2);
                     for (let i = 0; i < numTrapMonsters; i++) {
                         const pos = this.getRandomPosInRoom(room);
                         const type = this.game.combat.selectMonsterType(this.game.currentLevel);
