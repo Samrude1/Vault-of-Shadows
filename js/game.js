@@ -91,7 +91,7 @@ class Game {
                 if (!usedPositions.has(posKey)) {
                     usedPositions.add(posKey);
                     const type = this.combat.selectMonsterType(this.currentLevel);
-                    this.monsters.push(new Monster(pos.x, pos.y, type));
+                    this.monsters.push(new Monster(pos.x, pos.y, type, this.currentLevel));
                 } else {
                     i--; // Retry this iteration
                 }
@@ -375,7 +375,7 @@ class Game {
 
                 // Kobold King Summon (triggered by damage threshold)
                 if (monsterAtPos.shouldSummon) {
-                    this.handleBossAbilities(monsterAtPos);
+                    this.combat.handleBossAbilities(monsterAtPos);
                 }
             }
 
@@ -595,7 +595,7 @@ class Game {
                 if (!usedPositions.has(posKey)) {
                     usedPositions.add(posKey);
                     const type = this.combat.selectMonsterType(this.currentLevel);
-                    this.monsters.push(new Monster(pos.x, pos.y, type));
+                    this.monsters.push(new Monster(pos.x, pos.y, type, this.currentLevel));
                 } else {
                     i--; // Retry this iteration
                 }
@@ -722,7 +722,7 @@ class Game {
                 if (!usedPositions.has(posKey)) {
                     usedPositions.add(posKey);
                     const type = this.combat.selectMonsterType(this.currentLevel);
-                    this.monsters.push(new Monster(pos.x, pos.y, type));
+                    this.monsters.push(new Monster(pos.x, pos.y, type, this.currentLevel));
                 } else {
                     i--;
                 }
@@ -775,7 +775,7 @@ class Game {
         this.shopPosition = this.dungeon.placeShop();
 
         // Populate special rooms with content
-        this.populateSpecialRooms();
+        this.rooms.populateSpecialRooms();
 
         this.updateUI();
     }
@@ -1016,16 +1016,42 @@ class Game {
         shopOverlay.classList.remove('hidden');
 
         // Setup shop item click handlers
+        // Setup shop item click handlers
         const shopItems = document.querySelectorAll('.shop-item');
         shopItems.forEach(item => {
             // Remove existing listeners by cloning
             const newItem = item.cloneNode(true);
             item.parentNode.replaceChild(newItem, item);
 
+            const itemType = newItem.getAttribute('data-item');
+            let price = parseInt(newItem.getAttribute('data-price')); // Base price
+
+            // Dynamic pricing logic
+            if (itemType === 'attack_upgrade') {
+                // Price increases with current attack level
+                // Base attack is 4. First upgrade (to 5) costs 50.
+                // Formula: 50 * (current - base + 1)
+                const upgradeLevel = this.player.attack - 3;
+                price = 50 * upgradeLevel;
+            } else if (itemType === 'defense_upgrade') {
+                // Base defense is 2. First upgrade (to 3) costs 50.
+                const upgradeLevel = this.player.defense - 1;
+                price = 50 * upgradeLevel;
+            } else {
+                // Consumables scale slightly with dungeon depth
+                price = price + (this.currentLevel * 2);
+            }
+
+            // Update UI with new price
+            newItem.setAttribute('data-price', price);
+            const priceEl = newItem.querySelector('.shop-item-price');
+            if (priceEl) {
+                priceEl.textContent = `${price} gold`;
+            }
+
             newItem.addEventListener('click', () => {
-                const itemType = newItem.getAttribute('data-item');
-                const price = parseInt(newItem.getAttribute('data-price'));
-                this.purchaseItem(itemType, price);
+                const currentPrice = parseInt(newItem.getAttribute('data-price'));
+                this.purchaseItem(itemType, currentPrice);
             });
         });
 

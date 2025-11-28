@@ -102,7 +102,7 @@ class GameCombat {
             attempts++;
         }
 
-        const boss = new Monster(bossPos.x, bossPos.y, bossType);
+        const boss = new Monster(bossPos.x, bossPos.y, bossType, this.game.currentLevel);
         this.game.monsters.push(boss);
         this.game.addMessage(`⚠️ You feel a powerful presence... A ${boss.name} awaits!`);
     }
@@ -150,7 +150,7 @@ class GameCombat {
                         (this.game.player.x === x && this.game.player.y === y);
 
                     if (!occupied) {
-                        this.game.monsters.push(new Monster(x, y, type));
+                        this.game.monsters.push(new Monster(x, y, type, this.game.currentLevel));
                         spawned++;
                     }
                 }

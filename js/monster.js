@@ -1,15 +1,29 @@
 class Monster {
-    constructor(x, y, type = 'kobold') {
+    constructor(x, y, type = 'kobold', level = 1) {
         this.x = x;
         this.y = y;
         this.type = type;
+        this.level = level;
 
         // Monster stats based on type
         const stats = Monster.getStats(type);
+
+        // Base stats
         this.maxHealth = stats.health;
-        this.health = stats.health;
         this.attack = stats.attack;
         this.defense = stats.defense;
+
+        // Scale stats based on level (mild scaling to keep older monsters relevant)
+        // HP: +0.5 per level
+        // Atk: +0.2 per level
+        // Def: +0.1 per level
+        if (level > 1) {
+            this.maxHealth += Math.floor(level * 0.5);
+            this.attack += Math.floor(level * 0.2);
+            this.defense += Math.floor(level * 0.1);
+        }
+
+        this.health = this.maxHealth;
         this.symbol = stats.symbol;
         this.color = stats.color;
         this.name = stats.name;
@@ -291,81 +305,81 @@ class Monster {
     static getDropTable(type) {
         const dropTables = {
             kobold: {
-                goldMin: 5,
-                goldMax: 10,
+                goldMin: 1,
+                goldMax: 3,
                 itemChance: 0.10, // 10% chance
                 possibleItems: ['health_potion', 'dagger']
             },
             orc: {
-                goldMin: 10,
-                goldMax: 20,
+                goldMin: 3,
+                goldMax: 8,
                 itemChance: 0.15, // 15% chance
                 possibleItems: ['health_potion', 'sword', 'mace', 'leather_armor']
             },
             troll: {
-                goldMin: 20,
-                goldMax: 40,
+                goldMin: 8,
+                goldMax: 15,
                 itemChance: 0.25, // 25% chance
                 possibleItems: ['axe', 'magic_staff', 'chain_mail', 'plate_armor', 'health_potion']
             },
             bat: {
-                goldMin: 3,
-                goldMax: 8,
+                goldMin: 1,
+                goldMax: 2,
                 itemChance: 0.05, // 5% chance
                 possibleItems: ['health_potion']
             },
             skeleton: {
-                goldMin: 8,
-                goldMax: 15,
+                goldMin: 2,
+                goldMax: 5,
                 itemChance: 0.12, // 12% chance
                 possibleItems: ['health_potion', 'sword', 'leather_armor', 'chain_mail']
             },
             goblin: {
-                goldMin: 5,
-                goldMax: 12,
+                goldMin: 2,
+                goldMax: 6,
                 itemChance: 0.15, // 15% chance (hoarders)
                 possibleItems: ['health_potion', 'dagger', 'sword', 'leather_armor']
             },
             dragon: {
-                goldMin: 50,
-                goldMax: 100,
+                goldMin: 20,
+                goldMax: 40,
                 itemChance: 0.50, // 50% chance (guaranteed good loot)
                 possibleItems: ['axe', 'magic_staff', 'plate_armor', 'magic_robes', 'health_potion']
             },
             zombie: {
-                goldMin: 10,
-                goldMax: 20,
+                goldMin: 4,
+                goldMax: 10,
                 itemChance: 0.10, // 10% chance
                 possibleItems: ['health_potion', 'mace', 'chain_mail']
             },
             // BOSS DROP TABLES
             kobold_king: {
-                goldMin: 100,
-                goldMax: 150,
+                goldMin: 50,
+                goldMax: 80,
                 itemChance: 1.0, // 100% guaranteed
                 possibleItems: ['sword', 'chain_mail']
             },
             orc_warlord: {
-                goldMin: 150,
-                goldMax: 200,
+                goldMin: 80,
+                goldMax: 120,
                 itemChance: 1.0, // 100% guaranteed
                 possibleItems: ['axe', 'plate_armor']
             },
             lich: {
-                goldMin: 200,
-                goldMax: 300,
+                goldMin: 100,
+                goldMax: 150,
                 itemChance: 1.0, // 100% guaranteed
                 possibleItems: ['magic_staff', 'magic_robes', 'scroll_fireball', 'scroll_freeze']
             },
             amulet_guardian: {
-                goldMin: 250,
-                goldMax: 400,
+                goldMin: 150,
+                goldMax: 200,
                 itemChance: 1.0, // 100% guaranteed - drops Amulet
                 possibleItems: ['amulet'] // Special case
             },
             ancient_dragon: {
-                goldMin: 300,
-                goldMax: 500,
+                goldMin: 200,
+                goldMax: 300,
                 itemChance: 1.0, // 100% guaranteed
                 possibleItems: ['axe', 'magic_staff', 'plate_armor', 'magic_robes']
             }

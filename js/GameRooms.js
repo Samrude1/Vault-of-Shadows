@@ -31,7 +31,7 @@ class GameRooms {
                         const pos = this.getRandomPosInRoom(room);
                         const eliteTypes = ['orc', 'troll'];
                         const type = eliteTypes[Math.floor(Math.random() * eliteTypes.length)];
-                        this.game.monsters.push(new Monster(pos.x, pos.y, type));
+                        this.game.monsters.push(new Monster(pos.x, pos.y, type, this.game.currentLevel));
                     }
                     break;
 
@@ -44,7 +44,7 @@ class GameRooms {
                     for (let i = 0; i < numTrapMonsters; i++) {
                         const pos = this.getRandomPosInRoom(room);
                         const type = this.game.combat.selectMonsterType(this.game.currentLevel);
-                        this.game.monsters.push(new Monster(pos.x, pos.y, type));
+                        this.game.monsters.push(new Monster(pos.x, pos.y, type, this.game.currentLevel));
                     }
                     break;
 
@@ -53,11 +53,11 @@ class GameRooms {
                     for (let i = 0; i < numNestMonsters; i++) {
                         const pos = this.getRandomPosInRoom(room);
                         const type = this.game.combat.selectMonsterType(this.game.currentLevel);
-                        this.game.monsters.push(new Monster(pos.x, pos.y, type));
+                        this.game.monsters.push(new Monster(pos.x, pos.y, type, this.game.currentLevel));
                     }
                     for (let i = 0; i < 2; i++) {
                         const pos = this.getRandomPosInRoom(room);
-                        const goldAmount = 20 + Math.floor(Math.random() * 30);
+                        const goldAmount = 10 + Math.floor(Math.random() * 20);
                         this.game.items.push(new Item(pos.x, pos.y, 'gold', goldAmount));
                     }
                     break;
@@ -77,7 +77,7 @@ class GameRooms {
                     const numSkeletons = 2 + Math.floor(Math.random() * 2);
                     for (let i = 0; i < numSkeletons; i++) {
                         const pos = this.getRandomPosInRoom(room);
-                        this.game.monsters.push(new Monster(pos.x, pos.y, 'skeleton'));
+                        this.game.monsters.push(new Monster(pos.x, pos.y, 'skeleton', this.game.currentLevel));
                     }
                     break;
 
@@ -91,7 +91,7 @@ class GameRooms {
                     const numOrcs = 2 + Math.floor(Math.random() * 2);
                     for (let i = 0; i < numOrcs; i++) {
                         const pos = this.getRandomPosInRoom(room);
-                        this.game.monsters.push(new Monster(pos.x, pos.y, 'orc'));
+                        this.game.monsters.push(new Monster(pos.x, pos.y, 'orc', this.game.currentLevel));
                     }
                     break;
             }
