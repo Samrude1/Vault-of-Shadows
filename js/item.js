@@ -1,10 +1,11 @@
 class Item {
-    constructor(x, y, type = 'health_potion', value = null) {
+    constructor(x, y, type = 'health_potion', value = null, dungeonLevel = 1) {
         this.x = x;
         this.y = y;
         this.type = type;
         this.pickedUp = false;
         this.revealed = false;
+        this.dungeonLevel = dungeonLevel;
 
         const itemData = Item.getItemData(type);
         this.name = itemData.name;

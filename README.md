@@ -15,6 +15,7 @@ _Explore dark dungeons, fight monsters, and descend into the infinite depths._
 - **Percentage Bonuses**: Every 10 levels, gain +10% Max HP and +5% Attack/Defense.
 - **Equipment Scaling**: Weapons and armor found on deeper levels have bonus stats.
 - **Adjusted XP Curve**: Smoother progression for endless mode (1.12 exponent, was 1.15).
+- **Bug Fixes**: Resolved critical "NaN" stat errors caused by item scaling logic in deep dungeon levels.
 
 ## Features (v3.0 - Mechanics Overhaul) - ✅ Complete
 - **Exponential XP Curve**: Leveling becomes progressively harder, preventing "god mode" in late game.

@@ -25,7 +25,7 @@ class GameRooms {
                         const pos = this.getRandomPosInRoom(room);
                         const itemTypes = ['health_potion', 'sword', 'axe', 'plate_armor', 'magic_staff'];
                         const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
-                        this.game.items.push(new Item(pos.x, pos.y, type));
+                        this.game.items.push(new Item(pos.x, pos.y, type, null, this.game.currentLevel));
                     }
                     for (let i = 0; i < 2; i++) {
                         const pos = this.getRandomPosInRoom(room);
@@ -39,7 +39,7 @@ class GameRooms {
                     // Place a tempting item in the center
                     const trapScrolls = ['scroll_fireball', 'scroll_freeze', 'scroll_haste', 'scroll_mapping'];
                     const scrollType = trapScrolls[Math.floor(Math.random() * trapScrolls.length)];
-                    this.game.items.push(new Item(centerX, centerY, scrollType));
+                    this.game.items.push(new Item(centerX, centerY, scrollType, null, this.game.currentLevel));
 
                     // Surround the item with hidden traps
                     // 50% chance for each tile in the room to be a trap (except the item itself)
@@ -75,12 +75,12 @@ class GameRooms {
                     for (let i = 0; i < 2; i++) {
                         const pos = this.getRandomPosInRoom(room);
                         const goldAmount = 10 + Math.floor(Math.random() * 20);
-                        this.game.items.push(new Item(pos.x, pos.y, 'gold', goldAmount));
+                        this.game.items.push(new Item(pos.x, pos.y, 'gold', goldAmount, this.game.currentLevel));
                     }
                     break;
 
                 case 'shrine':
-                    this.game.items.push(new Item(centerX, centerY, 'shrine'));
+                    this.game.items.push(new Item(centerX, centerY, 'shrine', null, this.game.currentLevel));
                     break;
 
                 case 'library':
@@ -89,7 +89,7 @@ class GameRooms {
                         const pos = this.getRandomPosInRoom(room);
                         const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment', 'scroll_fireball', 'scroll_freeze', 'scroll_haste', 'scroll_identify', 'scroll_mapping', 'scroll_summon'];
                         const type = scrollTypes[Math.floor(Math.random() * scrollTypes.length)];
-                        this.game.items.push(new Item(pos.x, pos.y, type));
+                        this.game.items.push(new Item(pos.x, pos.y, type, null, this.game.currentLevel));
                     }
                     const numSkeletons = 2 + Math.floor(Math.random() * 2);
                     for (let i = 0; i < numSkeletons; i++) {
@@ -103,7 +103,7 @@ class GameRooms {
                     for (let i = 0; i < 2; i++) {
                         const pos = this.getRandomPosInRoom(room);
                         const type = armoryItems[Math.floor(Math.random() * armoryItems.length)];
-                        this.game.items.push(new Item(pos.x, pos.y, type));
+                        this.game.items.push(new Item(pos.x, pos.y, type, null, this.game.currentLevel));
                     }
                     const numOrcs = 2 + Math.floor(Math.random() * 2);
                     for (let i = 0; i < numOrcs; i++) {

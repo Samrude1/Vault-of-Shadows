@@ -119,7 +119,7 @@ class Game {
                     itemTypes = ['health_potion', 'axe', 'magic_staff', 'plate_armor', 'magic_robes'];
                 }
                 const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
-                this.items.push(new Item(pos.x, pos.y, type));
+                this.items.push(new Item(pos.x, pos.y, type, null, this.currentLevel));
             }
         }
 
@@ -127,7 +127,7 @@ class Game {
         if (this.currentLevel === this.winLevel) {
             const amuletPos = this.dungeon.getRandomFloorPosition();
             if (amuletPos.x !== this.player.x || amuletPos.y !== this.player.y) {
-                this.items.push(new Item(amuletPos.x, amuletPos.y, 'amulet'));
+                this.items.push(new Item(amuletPos.x, amuletPos.y, 'amulet', null, this.currentLevel));
                 this.addMessage('You sense something powerful nearby... The Amulet of Yendor!');
             }
         }
@@ -138,7 +138,7 @@ class Game {
             const pos = this.dungeon.getRandomFloorPosition();
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 const foodType = Math.random() < 0.5 ? 'rations' : 'bread';
-                this.items.push(new Item(pos.x, pos.y, foodType));
+                this.items.push(new Item(pos.x, pos.y, foodType, null, this.currentLevel));
             }
         }
 
@@ -149,7 +149,7 @@ class Game {
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment'];
                 const scrollType = scrollTypes[Math.floor(Math.random() * scrollTypes.length)];
-                this.items.push(new Item(pos.x, pos.y, scrollType));
+                this.items.push(new Item(pos.x, pos.y, scrollType, null, this.currentLevel));
             }
         }
 
@@ -439,7 +439,7 @@ class Game {
                 // Generate drops from killed monster
                 const drops = monsterAtPos.generateDrops();
                 drops.forEach(drop => {
-                    this.items.push(new Item(monsterAtPos.x, monsterAtPos.y, drop.type, drop.value));
+                    this.items.push(new Item(monsterAtPos.x, monsterAtPos.y, drop.type, drop.value, this.currentLevel));
                 });
 
                 this.addMessage(`You killed the ${monsterAtPos.name}! (+${xpReward} XP)`);
@@ -674,7 +674,7 @@ class Game {
                     itemTypes = ['health_potion', 'axe', 'magic_staff', 'plate_armor', 'magic_robes'];
                 }
                 const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
-                this.items.push(new Item(pos.x, pos.y, type));
+                this.items.push(new Item(pos.x, pos.y, type, null, this.currentLevel));
             }
         }
 
@@ -682,7 +682,7 @@ class Game {
         if (this.currentLevel === this.winLevel) {
             const amuletPos = this.dungeon.getRandomFloorPosition();
             if (amuletPos.x !== this.player.x || amuletPos.y !== this.player.y) {
-                this.items.push(new Item(amuletPos.x, amuletPos.y, 'amulet'));
+                this.items.push(new Item(amuletPos.x, amuletPos.y, 'amulet', null, this.currentLevel));
                 this.addMessage('You sense something powerful nearby... The Amulet of Yendor!');
             }
         }
@@ -693,7 +693,7 @@ class Game {
             const pos = this.dungeon.getRandomFloorPosition();
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 const foodType = Math.random() < 0.5 ? 'rations' : 'bread';
-                this.items.push(new Item(pos.x, pos.y, foodType));
+                this.items.push(new Item(pos.x, pos.y, foodType, null, this.currentLevel));
             }
         }
 
@@ -704,7 +704,7 @@ class Game {
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment', 'scroll_fireball', 'scroll_freeze', 'scroll_haste', 'scroll_identify', 'scroll_mapping', 'scroll_summon'];
                 const scrollType = scrollTypes[Math.floor(Math.random() * scrollTypes.length)];
-                this.items.push(new Item(pos.x, pos.y, scrollType));
+                this.items.push(new Item(pos.x, pos.y, scrollType, null, this.currentLevel));
             }
         }
 
@@ -800,7 +800,7 @@ class Game {
                     itemTypes = ['health_potion', 'axe', 'magic_staff', 'plate_armor', 'magic_robes'];
                 }
                 const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
-                this.items.push(new Item(pos.x, pos.y, type));
+                this.items.push(new Item(pos.x, pos.y, type, null, this.currentLevel));
             }
         }
 
@@ -810,7 +810,7 @@ class Game {
             const pos = this.dungeon.getRandomFloorPosition();
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 const foodType = Math.random() < 0.5 ? 'rations' : 'bread';
-                this.items.push(new Item(pos.x, pos.y, foodType));
+                this.items.push(new Item(pos.x, pos.y, foodType, null, this.currentLevel));
             }
         }
 
@@ -821,7 +821,7 @@ class Game {
             if (pos.x !== this.player.x || pos.y !== this.player.y) {
                 const scrollTypes = ['scroll_teleport', 'scroll_magic_missile', 'scroll_healing', 'scroll_enchantment'];
                 const scrollType = scrollTypes[Math.floor(Math.random() * scrollTypes.length)];
-                this.items.push(new Item(pos.x, pos.y, scrollType));
+                this.items.push(new Item(pos.x, pos.y, scrollType, null, this.currentLevel));
             }
         }
 
