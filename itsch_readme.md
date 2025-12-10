@@ -13,7 +13,7 @@ But beware—the dungeon goes deeper than Level 10. Brave adventurers can contin
 - **Procedurally Generated Dungeons** - Every playthrough is unique
 - **Epic Boss Battles** - Face the Kobold King, Orc Warlord, Lich, and Ancient Dragon
 - **Deep RPG Mechanics** - Level up to 100, find powerful equipment, master magic scrolls
-- **Strategic Combat** - Critical hits, dodging, status effects (poison, burn, stun, haste)
+- **Strategic Combat** - Critical hits, dodging, status effects, and **Armor Penetration** mechanics for high-level challenge
 - **Special Rooms** - Discover treasure vaults, monster nests, shrines, and libraries
 - **Modern Aesthetic** - Atmospheric lighting, vibrant colors, smooth animations
 

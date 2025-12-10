@@ -1,6 +1,6 @@
 # Vault Of Shadows - Dungeon Crawler Game
 
-**Version 3.1** - Phase 3 Complete: Mechanics Overhaul & Balance Fixes
+**Version 3.2** - Combat Rebalance & High-Level Scaling Update
 
 ## About
 
@@ -9,13 +9,17 @@ Vault of Shadows is a reimagining of the classic 1980 Rogue game, built with HTM
 ![Vault of Shadows - Gameplay Screenshot](screenshot.png?v3)
 _Explore dark dungeons, fight monsters, and descend into the infinite depths._
 
-## New Features (v3.1 - Balance & Scaling) - ✅ Complete
+## New Features (v3.2 - Combat Rebalance) - ✅ Complete
+- **Recursive Monster Scaling**: Monsters now gain compounding stats (+20% HP, +1.2 Atk, +0.8 Def per level) to match player power.
+- **Armor Penetration (Chip Damage)**: 10% of all damage now penetrates armor, preventing players from becoming invincible.
+- **Improved Balance**: Level 10+ is now significantly more challenging.
+
+## Features (v3.1 - Infinite Scaling) - ✅ Complete
 - **Removed Level Cap**: Players can now level up to 100 (was capped at 15).
-- **Increased Stat Gains**: +3 HP, +1 Attack, +1 Defense per level (was +2 HP, +0.5 Atk/Def).
+- **Increased Stat Gains**: +3 HP, +1 Attack, +1 Defense per level.
 - **Percentage Bonuses**: Every 10 levels, gain +10% Max HP and +5% Attack/Defense.
 - **Equipment Scaling**: Weapons and armor found on deeper levels have bonus stats.
-- **Adjusted XP Curve**: Smoother progression for endless mode (1.12 exponent, was 1.15).
-- **Bug Fixes**: Resolved critical "NaN" stat errors caused by item scaling logic in deep dungeon levels.
+- **Adjusted XP Curve**: Smoother progression for endless mode.
 
 ## Features (v3.0 - Mechanics Overhaul) - ✅ Complete
 - **Exponential XP Curve**: Leveling becomes progressively harder, preventing "god mode" in late game.

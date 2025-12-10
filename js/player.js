@@ -70,11 +70,21 @@ class Player {
             return { killed: false, dodged: true, damage: 0 };
         }
 
-        this.health -= amount;
+        // Armor Penetration: 10% of raw damage always penetrates
+        // This prevents becoming invincible with high defense
+        const rawDamage = amount;
+        const minDamage = Math.ceil(rawDamage * 0.10);
+
+        let damage = Math.max(minDamage, rawDamage - effectiveDefense);
+
+        // Ensure damage controls don't go below 0 (though minDamage handles this mostly)
+        damage = Math.max(0, damage);
+
+        this.health -= damage;
         if (this.health < 0) {
             this.health = 0;
         }
-        return { killed: this.health <= 0, dodged: false, damage: amount };
+        return { killed: this.health <= 0, dodged: false, damage: damage };
     }
 
     heal(amount) {

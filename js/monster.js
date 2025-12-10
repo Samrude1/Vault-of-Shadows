@@ -14,14 +14,14 @@ class Monster {
         this.defense = stats.defense;
 
         // Scale stats based on level (Percentage-Based Scaling for "Long Game")
-        // HP: +15% per level
-        // Atk: +0.4 per level
-        // Def: +0.2 per level
+        // HP: +20% compounding per level (up from 15%)
+        // Atk: +1.2 per level (up from 0.4)
+        // Def: +0.8 per level (up from 0.2)
         if (level > 1) {
             const levelScale = level - 1;
-            this.maxHealth = Math.floor(this.maxHealth * (1 + (levelScale * 0.15)));
-            this.attack += Math.floor(levelScale * 0.4);
-            this.defense += Math.floor(levelScale * 0.2);
+            this.maxHealth = Math.floor(this.maxHealth * Math.pow(1.20, levelScale)); // Compounding HP
+            this.attack += Math.floor(levelScale * 1.2);
+            this.defense += Math.floor(levelScale * 0.8);
         }
 
         // Monster Tiers (Veteran, Elite, Champion)
@@ -274,10 +274,12 @@ class Monster {
         // TÄMÄ RIVI KORVAA VANHAN:
         const damageRoll = Utils.rollDice(1, 4);
 
-        // 2. Laske todellinen perusvahinko: Nopan tulos + Attack-bonus - Defense
+        // 2. Laske todellinen perusvahinko: Nopan tulos + Attack-bonus
+        // Note: We do NOT subtract target.defense here anymore because player.takeDamage()
+        // now handles defense calculation / armor penetration.
         const baseDamage = Math.max(
             1,
-            damageRoll + attackPower - target.defense
+            damageRoll + attackPower
         );
 
         // Critical hit: 10% chance for 2x damage
