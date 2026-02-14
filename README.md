@@ -1,156 +1,163 @@
-# Vault Of Shadows - Dungeon Crawler Game
+# Vault of Shadows - Dungeon Crawler Game
 
-**Version 3.2** - Combat Rebalance & High-Level Scaling Update
+![Version](https://img.shields.io/badge/version-3.2.2-blue.svg)
+![License](https://img.shields.io/badge/license-ISC-green.svg)
+![Build](https://img.shields.io/badge/build-vite-646cff.svg)
+![Platform](https://img.shields.io/badge/platform-web--mobile-orange.svg)
 
-## About
+> A modern reimagining of the classic 1980's Rogue, built with a custom HTML5 Canvas engine and 100% Vanilla JavaScript.
 
-Vault of Shadows is a reimagining of the classic 1980 Rogue game, built with HTML5 Canvas and vanilla JavaScript. It combines the strategic gameplay of the original with a **modern mobile-game aesthetic**, featuring procedural graphics, atmospheric lighting, and a sleek user interface.
+![Vault of Shadows Gameplay](screenshot.png)
 
-![Vault of Shadows - Gameplay Screenshot](screenshot.png?v3)
-_Explore dark dungeons, fight monsters, and descend into the infinite depths._
+## 📜 About
 
-## New Features (v3.2 - Combat Rebalance) - ✅ Complete
-- **Recursive Monster Scaling**: Monsters now gain compounding stats (+20% HP, +1.2 Atk, +0.8 Def per level) to match player power.
-- **Armor Penetration (Chip Damage)**: 10% of all damage now penetrates armor, preventing players from becoming invincible.
-- **Improved Balance**: Level 10+ is now significantly more challenging.
+**Vault of Shadows** combines the strategic depth of traditional roguelikes with a modern, polished aesthetic. Unlike typical ASCII games, it features a custom-built rendering engine that generates procedural graphics, atmospheric lighting, and glassmorphism UI elements—all without a single external image asset.
 
-## Features (v3.1 - Infinite Scaling) - ✅ Complete
-- **Removed Level Cap**: Players can now level up to 100 (was capped at 15).
-- **Increased Stat Gains**: +3 HP, +1 Attack, +1 Defense per level.
-- **Percentage Bonuses**: Every 10 levels, gain +10% Max HP and +5% Attack/Defense.
-- **Equipment Scaling**: Weapons and armor found on deeper levels have bonus stats.
-- **Adjusted XP Curve**: Smoother progression for endless mode.
+The game is built to demonstrate how complex game systems (procedural generation, field-of-view algorithms, entity-component systems) can be implemented in pure JavaScript with modern tooling (Vite, ES Modules).
 
-## Features (v3.0 - Mechanics Overhaul) - ✅ Complete
-- **Exponential XP Curve**: Leveling becomes progressively harder, preventing "god mode" in late game.
-- **Dynamic Monster Scaling**: Monsters gain %-based stats per level to remain dangerous deep in the dungeon.
-- **Monster Tiers**: Face off against **Veteran**, **Elite**, and **Champion** variants of enemies with unique stats and rewards.
-
-## Features (v2.4 - Phase 2 Update) - ✅ Complete
-
-The game has been significantly expanded with deep RPG mechanics and unique content:
-
-### 👹 Boss Encounters
-Face off against powerful bosses every few levels, each with unique abilities and AI:
-- **Kobold King (Lvl 3)**: Summons minions when injured.
-- **Orc Warlord (Lvl 6)**: Enrages at low health for massive damage.
-- **Lich (Lvl 9)**: Teleports and raises the dead.
-- **Amulet Guardian (Lvl 10)**: Protects the Amulet with a magical shield.
-- **Ancient Dragon (Lvl 12)**: Breathes fire in a large area.
-
-### ⚔️ Enhanced Combat
-- **Critical Hits**: 10% chance to deal double damage with screen shake and flash effects 💥.
-- **Dodge System**: High defense allows you to completely avoid attacks ⚡.
-- **Status Effects**:
-  - **Poison** 💚: Damage over time.
-  - **Burn** 🔥: Heavy damage over time.
-  - **Stun** 💫: Skip turns.
-  - **Haste** ⏩: Move at double speed (15 turns).
-  - **Strength** 💪: +50% Attack damage (10 turns).
-  - **Shield** 🛡️: +50% Defense (10 turns).
-
-### 📜 Expanded Magic & Potions
-**10 unique scroll types** with improved effectiveness:
-- **Fireball**: Deal area damage in a 3-tile radius.
-- **Freeze**: Stun groups of enemies for 5 turns.
-- **Summoning**: Call a Spirit ally that attacks all nearby enemies for 20 damage each.
-- **Mapping**: Reveal the entire floor.
-- **Identify**: Reveal all items on the floor, even through fog of war.
-- **Haste**: Double speed for 15 turns.
-- **Teleport**, **Healing**, **Enchantment**, and more!
-
-**New Carryable Potions**:
-- **Shield Potion**: +50% Defense for 10 turns.
-- **Strength Potion**: +50% Attack for 10 turns.
-
-### 🏰 Special Rooms
-Discover unique locations in the dungeon:
-- **Treasure Rooms**: Guarded by elites, filled with loot.
-- **Monster Nests**: Dangerous swarms of enemies protecting gold.
-- **Shrines**: Restore full health and grant permanent stat boosts.
-- **Libraries**: Archives containing powerful magical scrolls.
-- **Trap Rooms**: High risk, high reward.
-
-### 🛒 Shop System
-- **Dynamic Pricing**: Items scale with dungeon level.
-- **Level-Appropriate Gear**: Shop offers Sword/Chain Mail at early levels, upgrading to Magic Staff/Robes in deeper dungeons.
-- **Removed Weak Items**: Dagger and Leather Armor no longer sold (too weak for shop prices).
-
-### 🎨 Visual & Audio Polish
-- **Procedural Wall Colors**: Every 3 levels features a unique color scheme (levels 1-3 are classic gray).
-- **Critical Hit Effects**: Screen shake and color flash on critical hits.
-- **Enhanced Sound**: Unique sound effect for critical hits.
+### Key Features
+- **♾️ Infinite Scaling**: No level caps. Monsters and equipment scale exponentially.
+- **⚔️ Tactical Combat**: Turn-based battles with critical hits, status effects, and positioning strategy.
+- **👹 Boss Encounters**: Unique boss mechanics every 3 levels (Summoners, Enragers, Teleporters).
+- **🎨 Procedural Visuals**: 3D-styled walls, dynamic lighting, and particle effects generated in code.
+- **🏰 Complex Dungeons**: Special rooms including Monster Nests, Treasuries, Libraries, and Shops.
 
 ---
 
-## Visual Features (v2.3)
+## 🛠️ Technology Stack
 
-- **Modern Mobile Aesthetic**: Vibrant colors, glassmorphism UI, and smooth animations.
-- **Advanced Procedural Graphics**: 3D walls, tiled floors, and token-based entities.
-- **Atmospheric Lighting**: High-contrast Fog of War and deep shadows.
+The project adheres to a "No Dependencies" philosophy for the runtime, using only native web technologies.
 
-## How to Play
-
-1. **Move**: Use **WASD** or **Arrow Keys**.
-2. **Diagonal**: Use **Q, E, Z, C**.
-3. **Wait**: Press **Space** to skip a turn (let enemies come to you).
-4. **Interact**:
-   - Walk into monsters to **Attack**.
-   - Walk over items to **Pick Up**.
-   - Press **B** on a Shop tile (`⌂`) to **Buy**.
-   - Use Stairs Down (`▼`) to go deeper.
-   - Use Stairs Up (`▲`) to go back.
-5. **Win**: Find the **Amulet of Yendor** (`"`) on **Level 10** and return to the surface!
-
-### Legend
-
-- **@** : Player
-- **k, o, T, D** : Enemies
-- **👑, 💀, 🐉** : Bosses
-- **!** : Potion
-- **/** : Weapon
-- **]** : Armor
-- **?** : Scroll
-- **%** : Food
-- **$** : Gold
-- **⌂** : Shop
-- **▼** : Stairs Down
-- **▲** : Stairs Up
-- **"** : Amulet of Yendor
-
-## Technical Details
-
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Rendering**: Custom HTML5 Canvas rendering engine (no external image assets).
-- **Audio**: Web Audio API for procedurally generated sound effects.
-- **No Dependencies**: 100% Vanilla JavaScript.
-
-### Project Structure (Refactored)
-
-The codebase has been modularized for better maintainability:
-
-```
-rogue/
-├── index.html          # Main entry point
-├── css/
-│   └── style.css       # Modern styling and glassmorphism effects
-├── js/
-│   ├── game.js         # Core game loop
-│   ├── GameCombat.js   # Combat logic, Boss AI, XP system
-│   ├── GameRooms.js    # Special room generation
-│   ├── GameShop.js     # Shop logic and pricing
-│   ├── GameUI.js       # UI updates and message log
-│   ├── dungeon.js      # Procedural generation algorithms
-│   ├── renderer.js     # Advanced canvas drawing
-│   ├── player.js       # Player logic
-│   ├── monster.js      # Monster AI and types
-│   ├── item.js         # Item systems
-│   ├── input.js        # Input handling
-│   ├── sound.js        # Procedural audio
-│   └── utils.js        # Utility functions
-└── README.md           # This file
-```
+- **Core**: Vanilla JavaScript (ES2022+)
+- **Architecture**: ES Modules (ESM)
+- **Rendering**: HTML5 Canvas API (Custom `Renderer` class with tile caching)
+- **Audio**: Web Audio API (Procedural sound synthesis)
+- **Build Tooling**: Vite 7.3.0 (Hot Module Replacement, Minification)
+- **Styling**: Modern CSS3 (Variables, Flexbox/Grid, Glassmorphism)
 
 ---
 
-**Enjoy the dungeon!** Watch out for the Kobold King on Level 3...
+## 🏗️ Architecture Overview
+
+The codebase is organized into modular components following a clean separation of concerns:
+
+```mermaid
+graph TD
+    Game[Game Loop (game.js)] --> Input[Input Handler]
+    Game --> Dungeon[Dungeon Generator]
+    Game --> Renderer[Rendering Engine]
+    Game --> Combat[Combat System]
+    
+    Dungeon --> Rooms[Room Generation]
+    Combat --> Monster[Monster AI]
+    Combat --> Player[Player Stats]
+    
+    Renderer --> Canvas[HTML5 Canvas]
+    Renderer --> Cache[Tile Cache]
+```
+
+### Core Systems
+
+| Module | Description |
+|--------|-------------|
+| `game.js` | Central coordinator. Manages the game loop (`requestAnimationFrame`), turn system, and state transitions. |
+| `dungeon.js` | Implements **BSP (Binary Space Partitioning)** inspired algorithms to generate connected rooms, corridors, and special areas. |
+| `renderer.js` | A high-performance drawing engine. Uses an off-screen canvas cache to render complex procedural tiles (walls, floors) only once to optimize FPS. |
+| `monster.js` | Contains the **AI Behavior Tree**. Monsters can hunt, flee, patrol, or use special abilities based on their type and health. |
+| `GameCombat.js`| Handles the math behind damage calculations, armor penetration, RNG, and applying status effects (Burn, Stun, Poison). |
+| `GameUI.js` | Manages the DOM-based UI overlay, updating health bars, logs, and inventory slots without triggering canvas redraws. |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v16.0.0 or higher)
+- npm (v7.0.0 or higher)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Samrude1/Vault-of-Shadows.git
+   cd Vault-of-Shadows
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Run Development Server**
+   Start the local Vite server with HMR:
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:5173` in your browser.
+
+4. **Build for Production**
+   Generate minimized assets for deployment:
+   ```bash
+   npm run build
+   ```
+   Output files will be in the `dist/` directory.
+
+---
+
+## 🎮 How to Play
+
+**Objective**: Descend to **Level 10**, defeat the Amulet Guardian, retrieve the **Amulet of Yendor**, and escape back to the surface.
+
+### Controls
+| Action | Keyboard |
+|--------|----------|
+| **Move** | `W`, `A`, `S`, `D` or Arrow Keys |
+| **Diagonal** | `Q`, `E`, `Z`, `C` |
+| **Wait** | `Space` (Skip turn / Rest) |
+| **Interact** | Bump into enemies to attack / items to pickup |
+| **Shop** | Press `B` when standing on Shop tile (`⌂`) |
+| **Use Item** | Press `U` to use selected item |
+
+### Mechanics Tips
+- **Fog of War**: You can only see what your character physically sees. Unexplored areas are black.
+- **Momentum**: Waiting (`Space`) heals a small amount of HP but costs food (Hunger).
+- **Strategy**: Use choke points in corridors to fight enemies one by one.
+- **Elements**: Use Fire scrolls on Treants and Freeze scrolls on grouped enemies.
+
+---
+
+## 💻 Technical Highlights
+
+### 1. Procedural Rendering
+Instead of loading sprite sheets, the game draws everything using `CanvasRenderingContext2D`.
+```javascript
+// Example: Creating a wall tile procedurally
+// renderer.js
+drawWall(x, y, isVisible) {
+    const color = this.hslToHex(hue, saturation, lightness); // Dynamic lighting
+    this.ctx.fillStyle = color;
+    this.ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+    // ... adds 3D highlights and shadows
+}
+```
+
+### 2. Recursive Difficulty Scaling
+To support infinite levels, monsters scale recursively rather than linearly:
+```javascript
+// GameCombat.js
+hp = baseHP * Math.pow(1.15, level - 1); // Exponential growth
+damage = baseDmg + (level * 1.5);
+```
+
+### 3. Smart Tile Caching
+To maintain 60FPS on mobile, the `Renderer` class caches generated tile textures. If a wall at `x,y` hasn't changed visibility, it redraws the cached image instead of recalculating vector paths.
+
+---
+
+## 📄 License
+
+This project is licensed under the **ISC License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+*Found a bug? Open an issue on [GitHub](https://github.com/Samrude1/Vault-of-Shadows/issues).*

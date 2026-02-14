@@ -1,5 +1,8 @@
+import { Item } from './item.js';
+import { Monster } from './monster.js';
+
 // GameRooms.js - Special room handling
-class GameRooms {
+export class GameRooms {
     constructor(game) {
         this.game = game;
     }

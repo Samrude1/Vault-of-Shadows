@@ -1,4 +1,6 @@
-class Player {
+import { Utils } from './utils.js';
+
+export class Player {
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -189,13 +191,20 @@ class Player {
         this.xpToNextLevel = this.getXPForNextLevel(this.level);
 
         // Level-up bonuses (increased for endless mode balance)
-        // +3 max HP and heal 3 HP
-        this.maxHealth += 3;
-        this.health = Math.min(this.health + 3, this.maxHealth);
+        // +2 max HP and heal 2 HP (reduced from +3)
+        this.maxHealth += 2;
+        this.health = Math.min(this.health + 2, this.maxHealth);
 
-        // +1 ATK and +1 DEF every level (no more alternating)
-        this.attack += 1;
-        this.defense += 1;
+        // Slowed down stat growth for better balance
+        // Attack: +1 every 2 levels
+        if (this.level % 2 === 0) {
+            this.attack += 1;
+        }
+
+        // Defense: +1 every 3 levels
+        if (this.level % 3 === 0) {
+            this.defense += 1;
+        }
 
         // Percentage bonus every 10 levels for scaling
         if (this.level % 10 === 0) {

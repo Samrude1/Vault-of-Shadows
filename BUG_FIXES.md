@@ -126,4 +126,23 @@ When hasted, monsters skip every other turn, effectively giving the player doubl
 
 1. **Add visual indicator for haste**: Show a speed icon or different player color when hasted
 2. **Add turn counter display**: Help players see when haste is active
-3. **Investigate double attack**: Set up logging to track monster turns
+### 5. ✅ Itch.io Deployment Errors (403 Forbidden / Blank Screen)
+**Problem**: Game failed to load on itch.io, showing "403 Forbidden" errors for asset files (CSS/JS) and a blank screen.
+
+**Cause**: Vite defaults to absolute paths (`/assets/...`) for built files. Itch.io often serves games from subdirectories (e.g. `itch.io/game/`), so absolute paths break because they look for files at the root of the domain instead of the game folder.
+
+**Fix**: Created `vite.config.js` and set the `base` option to `'./'`. This forces Vite to use relative paths for all assets, allowing the game to load correctly regardless of where it is hosted.
+
+**File**: `vite.config.js` (Created)
+
+**Code**:
+```javascript
+export default {
+    base: './', // Forces relative paths
+    build: {
+        outDir: 'dist',
+        assetsDir: 'assets',
+        sourcemap: false
+    }
+};
+```

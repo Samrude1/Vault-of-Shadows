@@ -1,4 +1,4 @@
-class DungeonGenerator {
+export class DungeonGenerator {
     constructor(width, height) {
         this.width = width;
         this.height = height;

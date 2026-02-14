@@ -1,4 +1,4 @@
-class SoundManager {
+export class SoundManager {
     constructor() {
         this.audioContext = null;
         this.enabled = true;

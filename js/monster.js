@@ -1,4 +1,6 @@
-class Monster {
+import { Utils } from './utils.js';
+
+export class Monster {
     constructor(x, y, type = 'kobold', level = 1) {
         this.x = x;
         this.y = y;
@@ -14,14 +16,14 @@ class Monster {
         this.defense = stats.defense;
 
         // Scale stats based on level (Percentage-Based Scaling for "Long Game")
-        // HP: +20% compounding per level (up from 15%)
-        // Atk: +1.2 per level (up from 0.4)
-        // Def: +0.8 per level (up from 0.2)
+        // HP: +25% compounding per level (up from 20%)
+        // Atk: +1.5 per level (up from 1.2)
+        // Def: +1.0 per level (up from 0.8)
         if (level > 1) {
             const levelScale = level - 1;
-            this.maxHealth = Math.floor(this.maxHealth * Math.pow(1.20, levelScale)); // Compounding HP
-            this.attack += Math.floor(levelScale * 1.2);
-            this.defense += Math.floor(levelScale * 0.8);
+            this.maxHealth = Math.floor(this.maxHealth * Math.pow(1.25, levelScale)); // Compounding HP
+            this.attack += Math.floor(levelScale * 1.5);
+            this.defense += Math.floor(levelScale * 1.0);
         }
 
         // Monster Tiers (Veteran, Elite, Champion)

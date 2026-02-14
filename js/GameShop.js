@@ -1,4 +1,6 @@
-class GameShop {
+import { Item } from './item.js';
+
+export class GameShop {
     constructor(game) {
         this.game = game;
         this.shopOpen = false;
@@ -75,13 +77,12 @@ class GameShop {
         });
 
         // Setup ESC key to close shop
-        const escHandler = (e) => {
+        this.escHandler = (e) => {
             if (e.key === 'Escape') {
                 this.close();
-                window.removeEventListener('keydown', escHandler);
             }
         };
-        window.addEventListener('keydown', escHandler);
+        window.addEventListener('keydown', this.escHandler);
 
         this.game.addMessage('Welcome to the shop! Press B or ESC to close.');
     }
@@ -90,6 +91,11 @@ class GameShop {
         this.shopOpen = false;
         const shopOverlay = document.getElementById('shop-overlay');
         shopOverlay.classList.add('hidden');
+
+        if (this.escHandler) {
+            window.removeEventListener('keydown', this.escHandler);
+            this.escHandler = null;
+        }
     }
 
     getWeaponForLevel(level) {

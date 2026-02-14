@@ -1,4 +1,6 @@
-class GameUI {
+import { Item } from './item.js';
+
+export class GameUI {
     constructor(game) {
         this.game = game;
     }

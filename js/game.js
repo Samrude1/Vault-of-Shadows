@@ -1,4 +1,16 @@
-class Game {
+import { Renderer } from './renderer.js';
+import { InputHandler } from './input.js';
+import { SoundManager } from './sound.js';
+import { DungeonGenerator } from './dungeon.js';
+import { Player } from './player.js';
+import { Monster } from './monster.js';
+import { Item } from './item.js';
+import { GameCombat } from './GameCombat.js';
+import { GameRooms } from './GameRooms.js';
+import { GameShop } from './GameShop.js';
+import { GameUI } from './GameUI.js';
+
+export class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
         this.renderer = new Renderer(this.canvas);
@@ -54,7 +66,16 @@ class Game {
         window.addEventListener('keydown', enableAudio);
         window.addEventListener('click', enableAudio);
 
+        // Setup sound settings UI
+        this.setupSoundSettings();
+
+        // Setup restart button
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            this.restart();
+        });
+
         this.init();
+        this.gameLoop();
     }
 
     init() {
@@ -170,16 +191,6 @@ class Game {
         this.gameOver = false;
         this.addMessage('Welcome to the dungeon! Move with WASD or arrow keys.');
         this.updateUI();
-
-        // Setup sound settings UI
-        this.setupSoundSettings();
-
-        // Setup restart button
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            this.restart();
-        });
-
-        this.gameLoop();
     }
 
     initFogOfWar() {
@@ -1056,7 +1067,4 @@ class Game {
     }
 }
 
-// Start the game when page loads
-window.addEventListener('DOMContentLoaded', () => {
-    new Game();
-});
+

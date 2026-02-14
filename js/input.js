@@ -1,4 +1,4 @@
-class InputHandler {
+export class InputHandler {
     constructor() {
         this.keys = {};
         this.lastKey = null;

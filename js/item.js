@@ -1,4 +1,4 @@
-class Item {
+export class Item {
     constructor(x, y, type = 'health_potion', value = null, dungeonLevel = 1) {
         this.x = x;
         this.y = y;

@@ -1,5 +1,7 @@
+import { Monster } from './monster.js';
+
 // GameCombat.js - Combat and monster-related methods
-class GameCombat {
+export class GameCombat {
     constructor(game) {
         this.game = game;
     }
